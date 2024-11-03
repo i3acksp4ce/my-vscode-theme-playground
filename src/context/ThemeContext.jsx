@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { useDebounce } from "../hooks/useDebounce";
+import { toast } from "sonner";
 import {
   adjustBrightnessForTheme,
   adjustLuminanceForTheme,
@@ -18,6 +25,16 @@ export function ThemeProvider({ children, defaultTheme }) {
   const [contrast, setContrast] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [originalTheme, setOriginalTheme] = useState(defaultTheme);
+  const [customThemes, setCustomThemes] = useState({});
+
+  // Move allThemes definition before handleThemeChange
+  const allThemes = useMemo(
+    () => ({
+      ...themes,
+      ...customThemes,
+    }),
+    [customThemes]
+  );
 
   const updateBrightness = useCallback(
     (value) => {
@@ -84,16 +101,89 @@ export function ThemeProvider({ children, defaultTheme }) {
     navigator.clipboard.writeText(JSON.stringify(theme, null, 2));
   }, [theme]);
 
-  const handleThemeChange = useCallback((themeId) => {
-    setIsLoading(true);
-    const newTheme = themes[themeId].theme;
-    setSelectedTheme(themeId);
-    setTheme(newTheme);
-    setOriginalTheme(newTheme);
-    setBrightness(0);
-    setLuminance(0);
-    setContrast(0);
-  }, []);
+  const handleThemeChange = useCallback(
+    (themeId) => {
+      setIsLoading(true);
+      const newTheme = allThemes[themeId]?.theme;
+
+      if (!newTheme) {
+        toast.error("Theme not found");
+        setIsLoading(false);
+        return;
+      }
+
+      setSelectedTheme(themeId);
+      setTheme(newTheme);
+      setOriginalTheme(newTheme);
+      setBrightness(0);
+      setLuminance(0);
+      setContrast(0);
+      setIsLoading(false);
+    },
+    [allThemes]
+  );
+
+  const addCustomTheme = useCallback(
+    (themeData, fileName) => {
+      try {
+        // Only require tokenColors for syntax highlighting
+        if (!themeData.tokenColors) {
+          throw new Error(
+            "Invalid theme structure: missing tokenColors property"
+          );
+        }
+
+        // Ensure theme has a name
+        const themeName = themeData.name || fileName;
+
+        // Create a new theme object with workbench colors from the current theme
+        const newThemeData = {
+          ...themeData,
+          name: themeName,
+          colors: themeData.colors || theme.colors, // Use existing colors if none provided
+        };
+
+        const themeId = `custom-${Date.now()}`;
+        const newTheme = {
+          id: themeId,
+          name: fileName,
+          theme: newThemeData,
+        };
+
+        setCustomThemes((prev) => ({
+          ...prev,
+          [themeId]: newTheme,
+        }));
+
+        // Auto-select the new theme
+        handleThemeChange(themeId);
+        toast.success(`Theme "${fileName}" added successfully`);
+        return themeId;
+      } catch (error) {
+        toast.error(`Failed to add theme: ${error.message}`);
+        throw error;
+      }
+    },
+    [theme.colors, handleThemeChange]
+  );
+
+  const removeCustomTheme = useCallback(
+    (themeId) => {
+      if (!themeId.startsWith("custom-")) return;
+
+      setCustomThemes((prev) => {
+        const newThemes = { ...prev };
+        delete newThemes[themeId];
+        return newThemes;
+      });
+
+      if (selectedTheme === themeId) {
+        handleThemeChange("default");
+      }
+      toast.success("Custom theme removed");
+    },
+    [selectedTheme, handleThemeChange]
+  );
 
   return (
     <ThemeContext.Provider
@@ -103,7 +193,7 @@ export function ThemeProvider({ children, defaultTheme }) {
         luminance,
         contrast,
         selectedTheme,
-        availableThemes: themes,
+        availableThemes: allThemes,
         handleThemeChange,
         handleBrightnessChange,
         handleLuminanceChange,
@@ -111,6 +201,9 @@ export function ThemeProvider({ children, defaultTheme }) {
         handleWCAG,
         handleReset,
         handleCopy,
+        addCustomTheme,
+        removeCustomTheme,
+        isCustomTheme: (id) => id.startsWith("custom-"),
         isLoading,
         setIsLoading,
       }}

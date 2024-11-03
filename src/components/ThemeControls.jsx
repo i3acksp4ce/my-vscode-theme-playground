@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 import {
@@ -9,8 +9,11 @@ import {
   ChevronUp,
   ChevronDown,
   RotateCcw,
+  Upload,
+  Trash2,
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { toast } from "sonner";
 
 const LoadingSpinner = () => <Loader2 className="h-4 w-4 animate-spin" />;
 
@@ -115,7 +118,30 @@ const ThemeControls = memo(function ThemeControls() {
     handleReset,
     handleCopy,
     isLoading,
+    addCustomTheme,
+    removeCustomTheme,
+    isCustomTheme,
   } = useTheme();
+
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const themeData = JSON.parse(text);
+      await addCustomTheme(themeData, file.name.replace(/\.json$/, ""));
+    } catch (error) {
+      toast.error(`Error loading theme: ${error.message}`);
+    } finally {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   return (
     <motion.div
@@ -127,20 +153,66 @@ const ThemeControls = memo(function ThemeControls() {
         <div className="flex flex-wrap items-start gap-6">
           <div className="flex-1 min-w-[200px] max-w-xs">
             <label className="text-sm font-medium mb-2 block">Theme</label>
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedTheme}
-                onChange={(e) => handleThemeChange(e.target.value)}
-                className="w-full bg-secondary text-secondary-foreground px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                disabled={isLoading}
-              >
-                {Object.entries(availableThemes).map(([id, { name }]) => (
-                  <option key={id} value={id}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-              {isLoading && <LoadingSpinner />}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <select
+                  value={selectedTheme}
+                  onChange={(e) => handleThemeChange(e.target.value)}
+                  className="w-full bg-secondary text-secondary-foreground px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  disabled={isLoading}
+                >
+                  <optgroup label="Built-in Themes">
+                    {Object.entries(availableThemes)
+                      .filter(([id]) => !isCustomTheme(id))
+                      .map(([id, { name }]) => (
+                        <option key={id} value={id}>
+                          {name}
+                        </option>
+                      ))}
+                  </optgroup>
+                  {Object.keys(availableThemes).some((id) =>
+                    isCustomTheme(id)
+                  ) && (
+                    <optgroup label="Custom Themes">
+                      {Object.entries(availableThemes)
+                        .filter(([id]) => isCustomTheme(id))
+                        .map(([id, { name }]) => (
+                          <option key={id} value={id}>
+                            {name}
+                            {isCustomTheme(id) && " (Custom)"}
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                </select>
+                {isLoading && <LoadingSpinner />}
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="secondary"
+                  icon={Upload}
+                >
+                  Upload Theme
+                </Button>
+                {isCustomTheme(selectedTheme) && (
+                  <Button
+                    onClick={() => removeCustomTheme(selectedTheme)}
+                    variant="destructive"
+                    icon={Trash2}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 

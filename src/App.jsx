@@ -164,7 +164,7 @@ function CodePreviews({ highlighter, defaultHighlighter }) {
 }
 
 function AppContent() {
-  const { theme, selectedTheme, setIsLoading } = useTheme();
+  const { theme, selectedTheme, setIsLoading, availableThemes } = useTheme();
   const [highlighter, setHighlighter] = useState(null);
   const [defaultHighlighter, setDefaultHighlighter] = useState(null);
   const [error, setError] = useState(null);
@@ -177,8 +177,10 @@ function AppContent() {
           ...convertThemeToShikiFormat(theme),
           name: "custom-theme",
         };
+
+        // Get the default theme from availableThemes instead of themes
         const defaultTheme = {
-          ...convertThemeToShikiFormat(themes[selectedTheme].theme),
+          ...convertThemeToShikiFormat(availableThemes[selectedTheme].theme),
           name: "default-theme",
         };
 
@@ -208,7 +210,7 @@ function AppContent() {
         defaultHighlighterInstance = null;
       }
     };
-  }, [theme, selectedTheme, setIsLoading]);
+  }, [theme, selectedTheme, setIsLoading, availableThemes]); // Add availableThemes to dependencies
 
   if (error) {
     return (
