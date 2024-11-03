@@ -9,6 +9,9 @@ import ThemeControls from "./components/ThemeControls";
 import CodePreview from "./components/CodePreview";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { cn } from "./lib/utils";
+import SettingsPanel from "./components/SettingsPanel";
+import { SettingsProvider, useSettings } from "./context/SettingsContext";
+import { Toaster } from "sonner";
 
 // Create singleton highlighter instances
 let highlighterInstance = null;
@@ -72,45 +75,59 @@ async function getHighlighter(theme, isDefault = false) {
 const defaultTheme = themes.default.theme;
 
 function Navbar() {
+  const { isSettingsOpen, setIsSettingsOpen, settings } = useSettings();
+
+  const shortcutKey = settings?.shortcuts?.toggleSettings || "K";
+
   return (
-    <motion.div
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b border-border z-50"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4">
-            <motion.h1
-              className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
-              VSCode Theme Playground
-            </motion.h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-full hover:bg-accent"
-            >
-              <Github className="w-5 h-5" />
-            </motion.a>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-full hover:bg-accent"
-            >
-              <Settings2 className="w-5 h-5" />
-            </motion.button>
+    <>
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b border-border z-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <motion.h1
+                className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                VSCode Theme Playground
+              </motion.h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full hover:bg-accent"
+              >
+                <Github className="w-5 h-5" />
+              </motion.a>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-2 rounded-full hover:bg-accent group relative"
+              >
+                <Settings2 className="w-5 h-5" />
+                <span className="absolute hidden group-hover:block right-0 top-full mt-2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded whitespace-nowrap">
+                  Settings (Ctrl+{shortcutKey})
+                </span>
+              </motion.button>
+            </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+      <SettingsPanel
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+    </>
   );
 }
 
@@ -234,9 +251,12 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme={defaultTheme}>
-      <AppContent />
-    </ThemeProvider>
+    <SettingsProvider>
+      <ThemeProvider defaultTheme={defaultTheme}>
+        <AppContent />
+        <Toaster position="top-right" />
+      </ThemeProvider>
+    </SettingsProvider>
   );
 }
 

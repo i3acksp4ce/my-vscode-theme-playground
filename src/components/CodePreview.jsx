@@ -2,6 +2,7 @@ import React, { memo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useSettings } from "../context/SettingsContext";
 
 const CodePreview = memo(function CodePreview({
   code,
@@ -11,6 +12,7 @@ const CodePreview = memo(function CodePreview({
   themeName = "custom-theme",
   defaultThemeName = "default-theme",
 }) {
+  const { settings } = useSettings();
   const modifiedRef = useRef(null);
   const defaultRef = useRef(null);
   const [copied, setCopied] = React.useState(false);
@@ -55,11 +57,19 @@ const CodePreview = memo(function CodePreview({
       lang,
     });
 
+    const codeStyle = {
+      fontSize: `${settings.appearance.fontSize}px`,
+      maxHeight: `${settings.appearance.previewHeight}px`,
+    };
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-lg border border-border bg-card overflow-hidden"
+        className={cn(
+          "rounded-lg border border-border bg-card overflow-hidden",
+          settings.layout.previewLayout === "stacked" && "grid-cols-1"
+        )}
       >
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card">
           <h3 className="text-sm font-medium capitalize">{lang}</h3>
@@ -77,7 +87,14 @@ const CodePreview = memo(function CodePreview({
           </motion.button>
         </div>
 
-        <div className="grid grid-cols-2 divide-x divide-border">
+        <div
+          className={cn(
+            "grid divide-x divide-border",
+            settings.layout.previewLayout === "side-by-side"
+              ? "grid-cols-2"
+              : "grid-cols-1 divide-y"
+          )}
+        >
           <div className="overflow-hidden">
             <div className="text-xs text-center py-1 bg-muted text-muted-foreground">
               Default
@@ -85,7 +102,8 @@ const CodePreview = memo(function CodePreview({
             <div
               ref={defaultRef}
               dangerouslySetInnerHTML={{ __html: defaultHtml }}
-              className="max-h-[400px] overflow-auto [&_pre]:m-0 [&_pre]:p-4 [&_pre]:text-sm [&_pre]:font-mono"
+              className="overflow-auto [&_pre]:m-0 [&_pre]:p-4 [&_pre]:font-mono"
+              style={codeStyle}
             />
           </div>
           <div className="overflow-hidden">
@@ -95,7 +113,8 @@ const CodePreview = memo(function CodePreview({
             <div
               ref={modifiedRef}
               dangerouslySetInnerHTML={{ __html: modifiedHtml }}
-              className="max-h-[400px] overflow-auto [&_pre]:m-0 [&_pre]:p-4 [&_pre]:text-sm [&_pre]:font-mono"
+              className="overflow-auto [&_pre]:m-0 [&_pre]:p-4 [&_pre]:font-mono"
+              style={codeStyle}
             />
           </div>
         </div>
