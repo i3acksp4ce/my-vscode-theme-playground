@@ -16,6 +16,7 @@ export function ThemeProvider({ children, defaultTheme }) {
   const [brightness, setBrightness] = useState(0);
   const [luminance, setLuminance] = useState(0);
   const [contrast, setContrast] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const updateBrightness = useCallback(
     (value) => {
@@ -68,6 +69,7 @@ export function ThemeProvider({ children, defaultTheme }) {
   }, [theme]);
 
   const handleThemeChange = useCallback((themeId) => {
+    setIsLoading(true);
     const newTheme = themes[themeId].theme;
     setSelectedTheme(themeId);
     setTheme(newTheme);
@@ -92,6 +94,8 @@ export function ThemeProvider({ children, defaultTheme }) {
         handleWCAG,
         handleReset,
         handleCopy,
+        isLoading,
+        setIsLoading,
       }}
     >
       {children}

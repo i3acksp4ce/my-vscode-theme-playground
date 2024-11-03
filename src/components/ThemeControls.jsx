@@ -1,6 +1,10 @@
 import React, { memo } from "react";
 import { useTheme } from "../context/ThemeContext";
 
+const LoadingSpinner = () => (
+  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+);
+
 const ThemeControls = memo(function ThemeControls() {
   const {
     brightness,
@@ -15,26 +19,37 @@ const ThemeControls = memo(function ThemeControls() {
     handleWCAG,
     handleReset,
     handleCopy,
+    isLoading,
   } = useTheme();
 
   return (
     <div className="flex flex-wrap items-center gap-4">
       <div className="flex items-center gap-2 min-w-[200px]">
         <label className="text-sm whitespace-nowrap">Theme</label>
-        <select
-          value={selectedTheme}
-          onChange={(e) => handleThemeChange(e.target.value)}
-          className="bg-gray-700 text-white px-3 py-1.5 rounded-md text-sm"
-        >
-          {Object.entries(availableThemes).map(([id, { name }]) => (
-            <option key={id} value={id}>
-              {name}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedTheme}
+            onChange={(e) => handleThemeChange(e.target.value)}
+            className="bg-gray-700 text-white px-3 py-1.5 rounded-md text-sm"
+            disabled={isLoading}
+          >
+            {Object.entries(availableThemes).map(([id, { name }]) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
+          {isLoading && <LoadingSpinner />}
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div
+        className="flex items-center gap-4 opacity-75 pointer-events-none transition-opacity duration-200"
+        style={{
+          opacity: isLoading ? 0.5 : 1,
+          pointerEvents: isLoading ? "none" : "auto",
+        }}
+      >
         <div className="flex items-center gap-2 min-w-[200px]">
           <label className="text-sm whitespace-nowrap">Brightness</label>
           <div className="flex items-center">
@@ -99,7 +114,13 @@ const ThemeControls = memo(function ThemeControls() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div
+        className="flex items-center gap-2 opacity-75 pointer-events-none transition-opacity duration-200"
+        style={{
+          opacity: isLoading ? 0.5 : 1,
+          pointerEvents: isLoading ? "none" : "auto",
+        }}
+      >
         <button
           onClick={() => handleWCAG("AA")}
           className="bg-blue-600 px-3 py-1.5 rounded-md hover:bg-blue-700 text-sm"

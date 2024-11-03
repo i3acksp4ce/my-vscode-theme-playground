@@ -7,7 +7,65 @@ import ThemeControls from "./components/ThemeControls";
 import CodePreview from "./components/CodePreview";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 
-// Remove manual theme merging
+// Create singleton highlighter instances
+let highlighterInstance = null;
+let defaultHighlighterInstance = null;
+
+async function getHighlighter(theme, isDefault = false) {
+  try {
+    if (isDefault) {
+      if (!defaultHighlighterInstance) {
+        defaultHighlighterInstance = await createHighlighter({
+          themes: [theme],
+          langs: [
+            "javascript",
+            "typescript",
+            "python",
+            "rust",
+            "go",
+            "css",
+            "jsx",
+            "tsx",
+            "php",
+            "json",
+            "vue",
+          ],
+        });
+      } else {
+        await defaultHighlighterInstance.loadTheme(theme);
+        defaultHighlighterInstance.setTheme(theme.name);
+      }
+      return defaultHighlighterInstance;
+    } else {
+      if (!highlighterInstance) {
+        highlighterInstance = await createHighlighter({
+          themes: [theme],
+          langs: [
+            "javascript",
+            "typescript",
+            "python",
+            "rust",
+            "go",
+            "css",
+            "jsx",
+            "tsx",
+            "php",
+            "json",
+            "vue",
+          ],
+        });
+      } else {
+        await highlighterInstance.loadTheme(theme);
+        highlighterInstance.setTheme(theme.name);
+      }
+      return highlighterInstance;
+    }
+  } catch (error) {
+    console.error("Error creating/updating highlighter:", error);
+    throw error;
+  }
+}
+
 const defaultTheme = themes.default.theme;
 
 function CodePreviews({ highlighter, defaultHighlighter }) {
@@ -36,7 +94,7 @@ function CodePreviews({ highlighter, defaultHighlighter }) {
 }
 
 function AppContent() {
-  const { theme, selectedTheme } = useTheme();
+  const { theme, selectedTheme, setIsLoading } = useTheme();
   const [highlighter, setHighlighter] = useState(null);
   const [defaultHighlighter, setDefaultHighlighter] = useState(null);
   const [error, setError] = useState(null);
@@ -44,66 +102,43 @@ function AppContent() {
   useEffect(() => {
     async function initHighlighters() {
       try {
-        // Modified theme
+        setIsLoading(true);
         const modifiedTheme = {
           ...convertThemeToShikiFormat(theme),
           name: "custom-theme",
         };
-
-        // Default theme for the current selection
         const defaultTheme = {
           ...convertThemeToShikiFormat(themes[selectedTheme].theme),
           name: "default-theme",
         };
 
-        // Initialize modified highlighter
-        const hl = await createHighlighter({
-          themes: [modifiedTheme],
-          langs: [
-            "javascript",
-            "typescript",
-            "python",
-            "rust",
-            "go",
-            "css",
-            "jsx",
-            "tsx",
-            "php",
-            "json",
-            "vue",
-          ],
-        });
-        await hl.loadTheme(modifiedTheme);
+        const hl = await getHighlighter(modifiedTheme);
+        const defaultHl = await getHighlighter(defaultTheme, true);
+
         setHighlighter(hl);
-
-        // Initialize/Update default highlighter
-        const defaultHl = await createHighlighter({
-          themes: [defaultTheme],
-          langs: [
-            "javascript",
-            "typescript",
-            "python",
-            "rust",
-            "go",
-            "css",
-            "jsx",
-            "tsx",
-            "php",
-            "json",
-            "vue",
-          ],
-        });
-        await defaultHl.loadTheme(defaultTheme);
         setDefaultHighlighter(defaultHl);
-
         setError(null);
       } catch (err) {
         console.error("Highlighter initialization error:", err);
         setError(err.message);
+      } finally {
+        setIsLoading(false);
       }
     }
     initHighlighters();
-  }, [theme, selectedTheme]); // Add selectedTheme to dependencies
+
+    // Cleanup function
+    return () => {
+      if (highlighterInstance) {
+        highlighterInstance.dispose();
+        highlighterInstance = null;
+      }
+      if (defaultHighlighterInstance) {
+        defaultHighlighterInstance.dispose();
+        defaultHighlighterInstance = null;
+      }
+    };
+  }, [theme, selectedTheme, setIsLoading]);
 
   if (error) {
     return (
