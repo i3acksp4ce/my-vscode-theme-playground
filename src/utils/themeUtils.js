@@ -40,27 +40,32 @@ export function adjustLuminanceForTheme(theme, value) {
 
 export function adjustContrastForTheme(theme, value) {
   const newTheme = JSON.parse(JSON.stringify(theme));
+  const factor = (100 + value) / 100; // Convert percentage to factor
+
   newTheme.tokenColors = newTheme.tokenColors.map((token) => {
     if (token.settings && token.settings.foreground) {
       const color = tinycolor(token.settings.foreground);
       const rgb = color.toRgb();
-      const factor = 1 + value / 100;
+
+      // Calculate relative to middle gray (128)
       rgb.r = Math.min(
         255,
-        Math.max(0, Math.round((rgb.r - 128) * factor + 128))
+        Math.max(0, Math.round(128 + (rgb.r - 128) * factor))
       );
       rgb.g = Math.min(
         255,
-        Math.max(0, Math.round((rgb.g - 128) * factor + 128))
+        Math.max(0, Math.round(128 + (rgb.g - 128) * factor))
       );
       rgb.b = Math.min(
         255,
-        Math.max(0, Math.round((rgb.b - 128) * factor + 128))
+        Math.max(0, Math.round(128 + (rgb.b - 128) * factor))
       );
+
       token.settings.foreground = tinycolor(rgb).toHexString();
     }
     return token;
   });
+
   return newTheme;
 }
 

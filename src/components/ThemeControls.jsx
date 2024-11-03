@@ -52,64 +52,110 @@ const ThemeControls = memo(function ThemeControls() {
       >
         <div className="flex items-center gap-2 min-w-[200px]">
           <label className="text-sm whitespace-nowrap">Brightness</label>
-          <div className="flex items-center">
-            <button
-              onClick={() => handleBrightnessChange(brightness - 1)}
-              className="px-2 py-1 bg-gray-600 rounded-l-md hover:bg-gray-700"
-              disabled={brightness <= -100}
-            >
-              -
-            </button>
-            <span className="px-3 py-1 bg-gray-700 text-sm">{brightness}</span>
-            <button
-              onClick={() => handleBrightnessChange(brightness + 1)}
-              className="px-2 py-1 bg-gray-600 rounded-r-md hover:bg-gray-700"
-              disabled={brightness >= 100}
-            >
-              +
-            </button>
+          <div className="flex flex-col items-center">
+            <div className="flex items-center">
+              <button
+                onClick={() => {
+                  const newValue = Number(brightness) - 10;
+                  handleBrightnessChange(newValue < -100 ? -100 : newValue);
+                }}
+                className="px-2 py-1 bg-gray-600 rounded-l-md hover:bg-gray-700"
+                disabled={brightness <= -100}
+              >
+                -
+              </button>
+              <span className="px-3 py-1 bg-gray-700 text-sm">
+                {brightness}%
+              </span>
+              <button
+                onClick={() => {
+                  const newValue = Number(brightness) + 10;
+                  handleBrightnessChange(newValue > 100 ? 100 : newValue);
+                }}
+                className="px-2 py-1 bg-gray-600 rounded-r-md hover:bg-gray-700"
+                disabled={brightness >= 100}
+              >
+                +
+              </button>
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              Current:{" "}
+              {brightness === 0
+                ? "Default"
+                : `${brightness > 0 ? "+" : ""}${brightness}%`}
+            </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 min-w-[200px]">
           <label className="text-sm whitespace-nowrap">Luminance</label>
-          <div className="flex items-center">
-            <button
-              onClick={() => handleLuminanceChange(luminance - 1)}
-              className="px-2 py-1 bg-gray-600 rounded-l-md hover:bg-gray-700"
-              disabled={luminance <= -100}
-            >
-              -
-            </button>
-            <span className="px-3 py-1 bg-gray-700 text-sm">{luminance}</span>
-            <button
-              onClick={() => handleLuminanceChange(luminance + 1)}
-              className="px-2 py-1 bg-gray-600 rounded-r-md hover:bg-gray-700"
-              disabled={luminance >= 100}
-            >
-              +
-            </button>
+          <div className="flex flex-col items-center">
+            <div className="flex items-center">
+              <button
+                onClick={() => {
+                  const newValue = Number(luminance) - 10;
+                  handleLuminanceChange(newValue < -100 ? -100 : newValue);
+                }}
+                className="px-2 py-1 bg-gray-600 rounded-l-md hover:bg-gray-700"
+                disabled={luminance <= -100}
+              >
+                -
+              </button>
+              <span className="px-3 py-1 bg-gray-700 text-sm">
+                {luminance}%
+              </span>
+              <button
+                onClick={() => {
+                  const newValue = Number(luminance) + 10;
+                  handleLuminanceChange(newValue > 100 ? 100 : newValue);
+                }}
+                className="px-2 py-1 bg-gray-600 rounded-r-md hover:bg-gray-700"
+                disabled={luminance >= 100}
+              >
+                +
+              </button>
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              Current:{" "}
+              {luminance === 0
+                ? "Default"
+                : `${luminance > 0 ? "+" : ""}${luminance}%`}
+            </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 min-w-[200px]">
           <label className="text-sm whitespace-nowrap">Contrast</label>
-          <div className="flex items-center">
-            <button
-              onClick={() => handleContrastChange(contrast - 1)}
-              className="px-2 py-1 bg-gray-600 rounded-l-md hover:bg-gray-700"
-              disabled={contrast <= -100}
-            >
-              -
-            </button>
-            <span className="px-3 py-1 bg-gray-700 text-sm">{contrast}</span>
-            <button
-              onClick={() => handleContrastChange(contrast + 1)}
-              className="px-2 py-1 bg-gray-600 rounded-r-md hover:bg-gray-700"
-              disabled={contrast >= 100}
-            >
-              +
-            </button>
+          <div className="flex flex-col items-center">
+            <div className="flex items-center">
+              <button
+                onClick={() => {
+                  const newValue = Number(contrast) - 10;
+                  handleContrastChange(newValue < -100 ? -100 : newValue);
+                }}
+                className="px-2 py-1 bg-gray-600 rounded-l-md hover:bg-gray-700"
+                disabled={contrast <= -100}
+              >
+                -
+              </button>
+              <span className="px-3 py-1 bg-gray-700 text-sm">{contrast}%</span>
+              <button
+                onClick={() => {
+                  const newValue = Number(contrast) + 10;
+                  handleContrastChange(newValue > 100 ? 100 : newValue);
+                }}
+                className="px-2 py-1 bg-gray-600 rounded-r-md hover:bg-gray-700"
+                disabled={contrast >= 100}
+              >
+                +
+              </button>
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              Current:{" "}
+              {contrast === 0
+                ? "Default"
+                : `${contrast > 0 ? "+" : ""}${contrast}%`}
+            </div>
           </div>
         </div>
       </div>

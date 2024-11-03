@@ -17,32 +17,48 @@ export function ThemeProvider({ children, defaultTheme }) {
   const [luminance, setLuminance] = useState(0);
   const [contrast, setContrast] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [originalTheme, setOriginalTheme] = useState(defaultTheme);
 
   const updateBrightness = useCallback(
     (value) => {
-      const newTheme = adjustBrightnessForTheme(theme, value);
       setBrightness(value);
+      if (value === 0) {
+        setTheme(JSON.parse(JSON.stringify(originalTheme)));
+        return;
+      }
+      // Always adjust from original theme to prevent compounding effects
+      const newTheme = adjustBrightnessForTheme(originalTheme, value);
       setTheme(newTheme);
     },
-    [theme]
+    [originalTheme]
   );
 
   const updateLuminance = useCallback(
     (value) => {
-      const newTheme = adjustLuminanceForTheme(theme, value);
       setLuminance(value);
+      if (value === 0) {
+        setTheme(JSON.parse(JSON.stringify(originalTheme)));
+        return;
+      }
+      // Always adjust from original theme to prevent compounding effects
+      const newTheme = adjustLuminanceForTheme(originalTheme, value);
       setTheme(newTheme);
     },
-    [theme]
+    [originalTheme]
   );
 
   const updateContrast = useCallback(
     (value) => {
-      const newTheme = adjustContrastForTheme(theme, value);
       setContrast(value);
+      if (value === 0) {
+        setTheme(JSON.parse(JSON.stringify(originalTheme)));
+        return;
+      }
+      // Always adjust from original theme to prevent compounding effects
+      const newTheme = adjustContrastForTheme(originalTheme, value);
       setTheme(newTheme);
     },
-    [theme]
+    [originalTheme]
   );
 
   const handleBrightnessChange = useDebounce(updateBrightness, 100);
@@ -73,6 +89,7 @@ export function ThemeProvider({ children, defaultTheme }) {
     const newTheme = themes[themeId].theme;
     setSelectedTheme(themeId);
     setTheme(newTheme);
+    setOriginalTheme(newTheme);
     setBrightness(0);
     setLuminance(0);
     setContrast(0);
