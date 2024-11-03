@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 const defaultSettings = {
   appearance: {
-    theme: "system",
+    theme: "system", // "light", "dark", or "system"
     fontSize: 14,
     previewHeight: 400,
   },
@@ -22,7 +22,10 @@ const defaultSettings = {
 const SettingsContext = createContext(null);
 
 export function SettingsProvider({ children }) {
-  const [settings, setSettings] = useState(defaultSettings);
+  const [settings, setSettings] = useState(() => {
+    const stored = localStorage.getItem("settings");
+    return stored ? JSON.parse(stored) : defaultSettings;
+  });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const updateSettings = (category, updates) => {
@@ -39,7 +42,40 @@ export function SettingsProvider({ children }) {
     setSettings(defaultSettings);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
+    const applyTheme = (mode) => {
+      document.documentElement.classList.remove("light", "dark");
+      document.documentElement.classList.add(mode);
+    };
+
+    const handleSystemThemeChange = (e) => {
+      if (settings.appearance.theme === "system") {
+        applyTheme(e.matches ? "dark" : "light");
+      }
+    };
+
+    if (settings.appearance.theme === "system") {
+      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      applyTheme(isDark ? "dark" : "light");
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", handleSystemThemeChange);
+    } else {
+      applyTheme(settings.appearance.theme);
+    }
+
+    return () => {
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .removeEventListener("change", handleSystemThemeChange);
+    };
+  }, [settings.appearance.theme]);
+
+  useEffect(() => {
+    localStorage.setItem("settings", JSON.stringify(settings));
+  }, [settings]);
+
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if (
         e.ctrlKey &&
