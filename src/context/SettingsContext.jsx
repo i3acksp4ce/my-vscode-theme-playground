@@ -6,11 +6,6 @@ const defaultSettings = {
     fontSize: 14,
     previewHeight: 400,
   },
-  editor: {
-    lineNumbers: true,
-    wordWrap: true,
-    minimap: false,
-  },
   layout: {
     previewLayout: "side-by-side",
   },

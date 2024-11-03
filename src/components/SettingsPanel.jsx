@@ -21,9 +21,8 @@ const SettingsPanel = ({ isOpen, onClose }) => {
 
   const tabs = [
     { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "editor", label: "Editor", icon: Code },
     { id: "layout", label: "Layout", icon: Layout },
-  ];
+  ]; // Removed editor tab
 
   const handleThemeModeChange = (mode) => {
     updateSettings("appearance", { theme: mode });
@@ -51,14 +50,14 @@ const SettingsPanel = ({ isOpen, onClose }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[98]"
             onClick={onClose}
           />
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="fixed right-0 top-0 h-full w-[300px] bg-card border-l border-border shadow-lg"
+            className="fixed right-0 top-0 h-full w-[300px] bg-card border-l border-border shadow-lg z-[99]"
           >
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h2 className="text-lg font-semibold">Settings</h2>
@@ -160,28 +159,6 @@ const SettingsPanel = ({ isOpen, onClose }) => {
                       ))}
                     </select>
                   </div>
-                </div>
-              )}
-
-              {selectedTab === "editor" && (
-                <div className="space-y-4">
-                  {Object.entries(settings.editor).map(([key, value]) => (
-                    <label key={key} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={value}
-                        onChange={(e) =>
-                          updateSettings("editor", { [key]: e.target.checked })
-                        }
-                        className="rounded border-primary text-primary focus:ring-primary"
-                      />
-                      <span className="text-sm">
-                        {key
-                          .replace(/([A-Z])/g, " $1")
-                          .replace(/^./, (str) => str.toUpperCase())}
-                      </span>
-                    </label>
-                  ))}
                 </div>
               )}
 
