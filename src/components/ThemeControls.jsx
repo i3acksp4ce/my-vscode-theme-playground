@@ -1,40 +1,69 @@
 import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
-import { Loader2, RefreshCw, Copy, Zap, ZapOff } from "lucide-react";
+import {
+  Loader2,
+  RefreshCw,
+  Copy,
+  Zap,
+  ChevronUp,
+  ChevronDown,
+  RotateCcw,
+} from "lucide-react";
 import { cn } from "../lib/utils";
 
 const LoadingSpinner = () => <Loader2 className="h-4 w-4 animate-spin" />;
 
-const Slider = ({
-  value,
-  onChange,
-  min = -100,
-  max = 100,
-  label,
-  icon: Icon,
-}) => {
+const ValueAdjuster = ({ value, onChange, label, icon: Icon }) => {
+  const steps = [5, 2];
+
   return (
     <motion.div
-      className="flex flex-col gap-2 min-w-[200px]"
+      className="flex flex-col gap-2 min-w-[140px]"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <div className="flex items-center gap-2 text-sm font-medium">
-        {Icon && <Icon className="w-4 h-4" />}
-        <span>{label}</span>
-      </div>
-      <div className="relative">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full appearance-none bg-secondary rounded-full h-2 accent-primary focus:outline-none focus:ring-2 focus:ring-primary/50"
-        />
-        <div className="mt-1 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between text-sm font-medium">
+        <span className="flex items-center gap-2">
+          {Icon && <Icon className="w-4 h-4" />}
+          {label}
+        </span>
+        <span className="text-xs text-muted-foreground">
           {value === 0 ? "Default" : `${value > 0 ? "+" : ""}${value}%`}
+        </span>
+      </div>
+      <div className="flex gap-1">
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => onChange(0)}
+          className={cn(
+            "px-2 py-1 rounded text-xs",
+            value === 0
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+          )}
+        >
+          <RotateCcw className="w-3 h-3" />
+        </motion.button>
+        <div className="flex flex-col gap-1">
+          {steps.map((step) => (
+            <div key={step} className="flex gap-1">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => onChange(Math.max(-100, value - step))}
+                className="px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs"
+              >
+                -{step}
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => onChange(Math.min(100, value + step))}
+                className="px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs"
+              >
+                +{step}
+              </motion.button>
+            </div>
+          ))}
         </div>
       </div>
     </motion.div>
@@ -115,18 +144,18 @@ const ThemeControls = memo(function ThemeControls() {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-wrap gap-6">
-            <Slider
+          <div className="flex flex-wrap gap-4">
+            <ValueAdjuster
               value={brightness}
               onChange={handleBrightnessChange}
               label="Brightness"
             />
-            <Slider
+            <ValueAdjuster
               value={luminance}
               onChange={handleLuminanceChange}
               label="Luminance"
             />
-            <Slider
+            <ValueAdjuster
               value={contrast}
               onChange={handleContrastChange}
               label="Contrast"
