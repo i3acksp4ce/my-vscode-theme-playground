@@ -5,6 +5,41 @@ const LoadingSpinner = () => (
   <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
 );
 
+const ValueSelector = ({ value, onChange, min = -100, max = 100, label }) => {
+  // Generate values with step of 5
+  const values = Array.from(
+    { length: Math.floor((max - min) / 5) + 1 },
+    (_, i) => min + i * 5
+  );
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium">{label}</label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="w-full bg-gray-700 text-white px-3 py-1.5 rounded-md text-sm appearance-none cursor-pointer"
+        >
+          {values.map((val) => (
+            <option key={val} value={val}>
+              {val === 0 ? "Default" : val > 0 ? `+${val}%` : `${val}%`}
+            </option>
+          ))}
+        </select>
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+          <svg className="w-4 h-4 fill-current opacity-50" viewBox="0 0 20 20">
+            <path d="M10 12l-6-6h12l-6 6z" transform="rotate(180 10 10)" />
+          </svg>
+        </div>
+      </div>
+      <div className="text-xs text-gray-400">
+        Current: {value === 0 ? "Default" : `${value > 0 ? "+" : ""}${value}%`}
+      </div>
+    </div>
+  );
+};
+
 const ThemeControls = memo(function ThemeControls() {
   const {
     brightness,
@@ -23,14 +58,14 @@ const ThemeControls = memo(function ThemeControls() {
   } = useTheme();
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
-      <div className="flex items-center gap-2 min-w-[200px]">
-        <label className="text-sm whitespace-nowrap">Theme</label>
+    <div className="flex flex-wrap gap-6 p-4">
+      <div className="flex-1 min-w-[200px] max-w-xs">
+        <label className="text-sm font-medium mb-2 block">Theme</label>
         <div className="flex items-center gap-2">
           <select
             value={selectedTheme}
             onChange={(e) => handleThemeChange(e.target.value)}
-            className="bg-gray-700 text-white px-3 py-1.5 rounded-md text-sm"
+            className="w-full bg-gray-700 text-white px-3 py-1.5 rounded-md text-sm"
             disabled={isLoading}
           >
             {Object.entries(availableThemes).map(([id, { name }]) => (
@@ -44,124 +79,39 @@ const ThemeControls = memo(function ThemeControls() {
       </div>
 
       <div
-        className="flex items-center gap-4 opacity-75 pointer-events-none transition-opacity duration-200"
+        className="flex flex-wrap gap-6 opacity-75 transition-opacity duration-200"
         style={{
           opacity: isLoading ? 0.5 : 1,
           pointerEvents: isLoading ? "none" : "auto",
         }}
       >
-        <div className="flex items-center gap-2 min-w-[200px]">
-          <label className="text-sm whitespace-nowrap">Brightness</label>
-          <div className="flex flex-col items-center">
-            <div className="flex items-center">
-              <button
-                onClick={() => {
-                  const newValue = Number(brightness) - 10;
-                  handleBrightnessChange(newValue < -100 ? -100 : newValue);
-                }}
-                className="px-2 py-1 bg-gray-600 rounded-l-md hover:bg-gray-700"
-                disabled={brightness <= -100}
-              >
-                -
-              </button>
-              <span className="px-3 py-1 bg-gray-700 text-sm">
-                {brightness}%
-              </span>
-              <button
-                onClick={() => {
-                  const newValue = Number(brightness) + 10;
-                  handleBrightnessChange(newValue > 100 ? 100 : newValue);
-                }}
-                className="px-2 py-1 bg-gray-600 rounded-r-md hover:bg-gray-700"
-                disabled={brightness >= 100}
-              >
-                +
-              </button>
-            </div>
-            <div className="text-xs text-gray-400 mt-1">
-              Current:{" "}
-              {brightness === 0
-                ? "Default"
-                : `${brightness > 0 ? "+" : ""}${brightness}%`}
-            </div>
-          </div>
+        <div className="w-[150px]">
+          <ValueSelector
+            value={brightness}
+            onChange={handleBrightnessChange}
+            label="Brightness"
+          />
         </div>
 
-        <div className="flex items-center gap-2 min-w-[200px]">
-          <label className="text-sm whitespace-nowrap">Luminance</label>
-          <div className="flex flex-col items-center">
-            <div className="flex items-center">
-              <button
-                onClick={() => {
-                  const newValue = Number(luminance) - 10;
-                  handleLuminanceChange(newValue < -100 ? -100 : newValue);
-                }}
-                className="px-2 py-1 bg-gray-600 rounded-l-md hover:bg-gray-700"
-                disabled={luminance <= -100}
-              >
-                -
-              </button>
-              <span className="px-3 py-1 bg-gray-700 text-sm">
-                {luminance}%
-              </span>
-              <button
-                onClick={() => {
-                  const newValue = Number(luminance) + 10;
-                  handleLuminanceChange(newValue > 100 ? 100 : newValue);
-                }}
-                className="px-2 py-1 bg-gray-600 rounded-r-md hover:bg-gray-700"
-                disabled={luminance >= 100}
-              >
-                +
-              </button>
-            </div>
-            <div className="text-xs text-gray-400 mt-1">
-              Current:{" "}
-              {luminance === 0
-                ? "Default"
-                : `${luminance > 0 ? "+" : ""}${luminance}%`}
-            </div>
-          </div>
+        <div className="w-[150px]">
+          <ValueSelector
+            value={luminance}
+            onChange={handleLuminanceChange}
+            label="Luminance"
+          />
         </div>
 
-        <div className="flex items-center gap-2 min-w-[200px]">
-          <label className="text-sm whitespace-nowrap">Contrast</label>
-          <div className="flex flex-col items-center">
-            <div className="flex items-center">
-              <button
-                onClick={() => {
-                  const newValue = Number(contrast) - 10;
-                  handleContrastChange(newValue < -100 ? -100 : newValue);
-                }}
-                className="px-2 py-1 bg-gray-600 rounded-l-md hover:bg-gray-700"
-                disabled={contrast <= -100}
-              >
-                -
-              </button>
-              <span className="px-3 py-1 bg-gray-700 text-sm">{contrast}%</span>
-              <button
-                onClick={() => {
-                  const newValue = Number(contrast) + 10;
-                  handleContrastChange(newValue > 100 ? 100 : newValue);
-                }}
-                className="px-2 py-1 bg-gray-600 rounded-r-md hover:bg-gray-700"
-                disabled={contrast >= 100}
-              >
-                +
-              </button>
-            </div>
-            <div className="text-xs text-gray-400 mt-1">
-              Current:{" "}
-              {contrast === 0
-                ? "Default"
-                : `${contrast > 0 ? "+" : ""}${contrast}%`}
-            </div>
-          </div>
+        <div className="w-[150px]">
+          <ValueSelector
+            value={contrast}
+            onChange={handleContrastChange}
+            label="Contrast"
+          />
         </div>
       </div>
 
       <div
-        className="flex items-center gap-2 opacity-75 pointer-events-none transition-opacity duration-200"
+        className="flex flex-wrap items-end gap-2"
         style={{
           opacity: isLoading ? 0.5 : 1,
           pointerEvents: isLoading ? "none" : "auto",
