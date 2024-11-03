@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createHighlighter } from "shiki";
+import { motion, AnimatePresence } from "framer-motion";
+import { Github, Settings2, Copy, RefreshCw } from "lucide-react";
 import { themes } from "./themes";
 import { SAMPLE_CODES } from "./data/sampleCodes";
 import { convertThemeToShikiFormat } from "./utils/themeUtils";
 import ThemeControls from "./components/ThemeControls";
 import CodePreview from "./components/CodePreview";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import { cn } from "./lib/utils";
 
 // Create singleton highlighter instances
 let highlighterInstance = null;
@@ -68,28 +71,78 @@ async function getHighlighter(theme, isDefault = false) {
 
 const defaultTheme = themes.default.theme;
 
+function Navbar() {
+  return (
+    <motion.div
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b border-border z-50"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center gap-4">
+            <motion.h1
+              className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              VSCode Theme Playground
+            </motion.h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <motion.a
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full hover:bg-accent"
+            >
+              <Github className="w-5 h-5" />
+            </motion.a>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="p-2 rounded-full hover:bg-accent"
+            >
+              <Settings2 className="w-5 h-5" />
+            </motion.button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function CodePreviews({ highlighter, defaultHighlighter }) {
   const { theme, selectedTheme } = useTheme();
   const themeObject = useMemo(() => convertThemeToShikiFormat(theme), [theme]);
 
-  return useMemo(
-    () => (
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(1000px,1fr))] gap-6">
-        {Object.entries(SAMPLE_CODES).map(([lang, code]) => (
-          <div key={lang}>
-            <CodePreview
-              code={code}
-              lang={lang}
-              highlighter={highlighter}
-              defaultHighlighter={defaultHighlighter}
-              themeName="custom-theme"
-              defaultThemeName="default-theme"
-            />
-          </div>
-        ))}
-      </div>
-    ),
-    [highlighter, defaultHighlighter, themeObject]
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="grid grid-cols-1 2xl:grid-cols-2 gap-6 p-4"
+    >
+      {Object.entries(SAMPLE_CODES).map(([lang, code], index) => (
+        <motion.div
+          key={lang}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+        >
+          <CodePreview
+            code={code}
+            lang={lang}
+            highlighter={highlighter}
+            defaultHighlighter={defaultHighlighter}
+            themeName="custom-theme"
+            defaultThemeName="default-theme"
+          />
+        </motion.div>
+      ))}
+    </motion.div>
   );
 }
 
@@ -142,36 +195,40 @@ function AppContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-6 pt-28 flex items-center justify-center">
-        <div className="bg-red-900/50 p-4 rounded-lg">
-          <h2 className="text-xl font-bold mb-2">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-background flex items-center justify-center p-4"
+      >
+        <div className="bg-destructive/20 border border-destructive p-6 rounded-lg max-w-md">
+          <h2 className="text-xl font-bold mb-2 text-destructive">
             Error Initializing Highlighter
           </h2>
-          <p>{error}</p>
+          <p className="text-destructive-foreground">{error}</p>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <>
-      <div className=" bg-gray-900 text-white h-auto">
-        <div className="fixed top-0 left-0 right-0 bg-gray-800 shadow-lg z-50">
-          <div className="max-w-7xl mx-auto p-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between"></div>
-            <h1 className="text-2xl font-bold">VSCode Theme Playground</h1>
+    <div className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <main className="pt-20 pb-16">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
             <ThemeControls />
-          </div>
+          </motion.div>
+          <CodePreviews
+            highlighter={highlighter}
+            defaultHighlighter={defaultHighlighter}
+          />
         </div>
-      </div>
-
-      <div className="max-w-full mx-auto p-6 pt-28">
-        <CodePreviews
-          highlighter={highlighter}
-          defaultHighlighter={defaultHighlighter}
-        />
-      </div>
-    </>
+      </main>
+    </div>
   );
 }
 
