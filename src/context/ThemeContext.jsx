@@ -91,11 +91,15 @@ export function ThemeProvider({ children, defaultTheme }) {
   );
 
   const handleReset = useCallback(() => {
-    setTheme(defaultTheme);
-    setBrightness(0);
-    setLuminance(0);
-    setContrast(0);
-  }, [defaultTheme]);
+    const currentTheme = allThemes[selectedTheme]?.theme;
+    if (currentTheme) {
+      setTheme(currentTheme);
+      setOriginalTheme(currentTheme);
+      setBrightness(0);
+      setLuminance(0);
+      setContrast(0);
+    }
+  }, [selectedTheme, allThemes]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(JSON.stringify(theme, null, 2));
