@@ -25,7 +25,14 @@ const Tooltip = ({ children, content }) => (
   </div>
 );
 
-const ValueAdjuster = ({ value, onChange, label, icon: Icon, description }) => {
+const ValueAdjuster = ({
+  value,
+  onChange,
+  label,
+  icon: Icon,
+  description,
+  disabled,
+}) => {
   const steps = [5, 2];
 
   return (
@@ -50,8 +57,9 @@ const ValueAdjuster = ({ value, onChange, label, icon: Icon, description }) => {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => onChange(0)}
+          disabled={disabled}
           className={cn(
-            "p-2 rounded-md text-xs transition-colors",
+            "p-2 rounded-md text-xs transition-colors disabled:opacity-50",
             value === 0
               ? "bg-primary text-primary-foreground"
               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -65,14 +73,16 @@ const ValueAdjuster = ({ value, onChange, label, icon: Icon, description }) => {
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onChange(Math.max(-100, value - step))}
-                className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium"
+                disabled={disabled}
+                className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
               >
                 -{step}
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onChange(Math.min(100, value + step))}
-                className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium"
+                disabled={disabled}
+                className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
               >
                 +{step}
               </motion.button>
@@ -182,6 +192,15 @@ const DropZone = ({ onFileDrop }) => {
   );
 };
 
+const LoadingOverlay = () => (
+  <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-lg border border-border">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      <span className="text-sm font-medium">Loading theme...</span>
+    </div>
+  </div>
+);
+
 const ThemeControls = memo(function ThemeControls() {
   const {
     brightness,
@@ -216,8 +235,9 @@ const ThemeControls = memo(function ThemeControls() {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-border bg-gradient-to-b from-background to-card p-6 shadow-lg"
+      className="rounded-xl border border-border bg-gradient-to-b from-background to-card p-6 shadow-lg relative"
     >
+      {isLoading && <LoadingOverlay />}
       <div className="space-y-8">
         <div className="grid gap-8 md:grid-cols-[300px,1fr]">
           <div className="space-y-4">
@@ -227,7 +247,7 @@ const ThemeControls = memo(function ThemeControls() {
                 <select
                   value={selectedTheme}
                   onChange={(e) => handleThemeChange(e.target.value)}
-                  className="w-full bg-card text-foreground px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border"
+                  className="w-full bg-card text-foreground px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border disabled:opacity-50"
                   disabled={isLoading}
                 >
                   <optgroup label="Built-in Themes">
@@ -254,7 +274,6 @@ const ThemeControls = memo(function ThemeControls() {
                     </optgroup>
                   )}
                 </select>
-                {isLoading && <LoadingSpinner />}
               </div>
             </div>
 
@@ -266,6 +285,7 @@ const ThemeControls = memo(function ThemeControls() {
                 variant="destructive"
                 icon={Trash2}
                 className="w-full"
+                disabled={isLoading}
               >
                 Remove Custom Theme
               </Button>
@@ -278,37 +298,58 @@ const ThemeControls = memo(function ThemeControls() {
               onChange={handleBrightnessChange}
               label="Brightness"
               description="Adjust the overall brightness of the theme"
+              disabled={isLoading}
             />
             <ValueAdjuster
               value={luminance}
               onChange={handleLuminanceChange}
               label="Luminance"
               description="Fine-tune the perceived brightness"
+              disabled={isLoading}
             />
             <ValueAdjuster
               value={contrast}
               onChange={handleContrastChange}
               label="Contrast"
               description="Modify the difference between light and dark colors"
+              disabled={isLoading}
             />
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
           <Tooltip content="Adjust colors to meet WCAG AA accessibility standards">
-            <Button onClick={() => handleWCAG("AA")} icon={Zap}>
+            <Button
+              onClick={() => handleWCAG("AA")}
+              icon={Zap}
+              disabled={isLoading}
+            >
               WCAG AA
             </Button>
           </Tooltip>
           <Tooltip content="Adjust colors to meet WCAG AAA accessibility standards">
-            <Button onClick={() => handleWCAG("AAA")} icon={Zap}>
+            <Button
+              onClick={() => handleWCAG("AAA")}
+              icon={Zap}
+              disabled={isLoading}
+            >
               WCAG AAA
             </Button>
           </Tooltip>
-          <Button onClick={handleReset} variant="secondary" icon={RefreshCw}>
+          <Button
+            onClick={handleReset}
+            variant="secondary"
+            icon={RefreshCw}
+            disabled={isLoading}
+          >
             Reset All
           </Button>
-          <Button onClick={handleCopy} variant="secondary" icon={Copy}>
+          <Button
+            onClick={handleCopy}
+            variant="secondary"
+            icon={Copy}
+            disabled={isLoading}
+          >
             Copy Theme
           </Button>
         </div>
