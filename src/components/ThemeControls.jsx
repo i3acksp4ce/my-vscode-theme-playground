@@ -53,42 +53,27 @@ const ValueAdjuster = ({
           {value === 0 ? "Default" : `${value > 0 ? "+" : ""}${value}%`}
         </span>
       </div>
-      <div className="flex gap-2">
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={() => onChange(0)}
-          disabled={disabled}
-          className={cn(
-            "p-2 rounded-md text-xs transition-colors disabled:opacity-50",
-            value === 0
-              ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-          )}
-        >
-          <RotateCcw className="w-3 h-3" />
-        </motion.button>
-        <div className="flex flex-1 flex-col gap-1">
-          {steps.map((step) => (
-            <div key={step} className="flex gap-1">
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => onChange(Math.max(-100, value - step))}
-                disabled={disabled}
-                className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
-              >
-                -{step}
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => onChange(Math.min(100, value + step))}
-                disabled={disabled}
-                className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
-              >
-                +{step}
-              </motion.button>
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-col gap-1">
+        {steps.map((step) => (
+          <div key={step} className="flex gap-1">
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onChange(Math.max(-100, value - step))}
+              disabled={disabled}
+              className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
+            >
+              -{step}
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onChange(Math.min(100, value + step))}
+              disabled={disabled}
+              className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
+            >
+              +{step}
+            </motion.button>
+          </div>
+        ))}
       </div>
     </motion.div>
   );
