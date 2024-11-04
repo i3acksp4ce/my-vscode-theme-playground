@@ -1,4 +1,4 @@
-import React, { memo, useRef } from "react";
+import React, { memo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 import {
@@ -103,6 +103,74 @@ const Button = ({
   );
 };
 
+const DropZone = ({ onFileDrop }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file?.type === "application/json") {
+      onFileDrop(file);
+    } else {
+      toast.error("Please drop a JSON file");
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onFileDrop(file);
+    }
+  };
+
+  return (
+    <motion.div
+      className={cn(
+        "relative rounded-md border-2 border-dashed p-4 transition-colors",
+        isDragging
+          ? "border-primary bg-primary/5"
+          : "border-muted hover:border-muted-foreground/50"
+      )}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className="flex flex-col items-center justify-center gap-2 cursor-pointer"
+      >
+        <Upload className="w-8 h-8 text-muted-foreground" />
+        <div className="text-center">
+          <p className="text-sm font-medium">
+            Drop theme file here or click to upload
+          </p>
+          <p className="text-xs text-muted-foreground">Supports JSON files</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const ThemeControls = memo(function ThemeControls() {
   const {
     brightness,
@@ -123,23 +191,13 @@ const ThemeControls = memo(function ThemeControls() {
     isCustomTheme,
   } = useTheme();
 
-  const fileInputRef = useRef(null);
-
-  const handleFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const handleFileDrop = async (file) => {
     try {
       const text = await file.text();
       const themeData = JSON.parse(text);
       await addCustomTheme(themeData, file.name.replace(/\.json$/, ""));
     } catch (error) {
       toast.error(`Error loading theme: ${error.message}`);
-    } finally {
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     }
   };
 
@@ -188,31 +246,18 @@ const ThemeControls = memo(function ThemeControls() {
                 {isLoading && <LoadingSpinner />}
               </div>
 
-              <div className="flex gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
+              <DropZone onFileDrop={handleFileDrop} />
+
+              {isCustomTheme(selectedTheme) && (
                 <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="secondary"
-                  icon={Upload}
+                  onClick={() => removeCustomTheme(selectedTheme)}
+                  variant="destructive"
+                  icon={Trash2}
+                  className="w-full"
                 >
-                  Upload Theme
+                  Remove Theme
                 </Button>
-                {isCustomTheme(selectedTheme) && (
-                  <Button
-                    onClick={() => removeCustomTheme(selectedTheme)}
-                    variant="destructive"
-                    icon={Trash2}
-                  >
-                    Remove
-                  </Button>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
