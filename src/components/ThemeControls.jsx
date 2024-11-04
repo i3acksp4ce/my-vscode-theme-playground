@@ -6,41 +6,52 @@ import {
   RefreshCw,
   Copy,
   Zap,
-  ChevronUp,
-  ChevronDown,
   RotateCcw,
   Upload,
   Trash2,
+  Info,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 
 const LoadingSpinner = () => <Loader2 className="h-4 w-4 animate-spin" />;
 
-const ValueAdjuster = ({ value, onChange, label, icon: Icon }) => {
+const Tooltip = ({ children, content }) => (
+  <div className="group relative">
+    {children}
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1 bg-popover text-popover-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+      {content}
+    </div>
+  </div>
+);
+
+const ValueAdjuster = ({ value, onChange, label, icon: Icon, description }) => {
   const steps = [5, 2];
 
   return (
     <motion.div
-      className="flex flex-col gap-2 min-w-[140px]"
+      className="flex flex-col gap-2 min-w-[160px] bg-card/50 p-4 rounded-lg border border-border/50"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
       <div className="flex items-center justify-between text-sm font-medium">
-        <span className="flex items-center gap-2">
-          {Icon && <Icon className="w-4 h-4" />}
-          {label}
-        </span>
-        <span className="text-xs text-muted-foreground">
+        <Tooltip content={description}>
+          <span className="flex items-center gap-2 cursor-help">
+            {Icon && <Icon className="w-4 h-4" />}
+            {label}
+            <Info className="w-3 h-3 text-muted-foreground" />
+          </span>
+        </Tooltip>
+        <span className="text-xs font-bold px-2 py-1 rounded-full bg-secondary">
           {value === 0 ? "Default" : `${value > 0 ? "+" : ""}${value}%`}
         </span>
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-2">
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => onChange(0)}
           className={cn(
-            "px-2 py-1 rounded text-xs",
+            "p-2 rounded-md text-xs transition-colors",
             value === 0
               ? "bg-primary text-primary-foreground"
               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -48,20 +59,20 @@ const ValueAdjuster = ({ value, onChange, label, icon: Icon }) => {
         >
           <RotateCcw className="w-3 h-3" />
         </motion.button>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-1 flex-col gap-1">
           {steps.map((step) => (
             <div key={step} className="flex gap-1">
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onChange(Math.max(-100, value - step))}
-                className="px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs"
+                className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium"
               >
                 -{step}
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onChange(Math.min(100, value + step))}
-                className="px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs"
+                className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium"
               >
                 +{step}
               </motion.button>
@@ -139,10 +150,10 @@ const DropZone = ({ onFileDrop }) => {
   return (
     <motion.div
       className={cn(
-        "relative rounded-md border-2 border-dashed p-4 transition-colors",
+        "relative rounded-lg border-2 border-dashed p-6 transition-colors",
         isDragging
           ? "border-primary bg-primary/5"
-          : "border-muted hover:border-muted-foreground/50"
+          : "border-muted hover:border-primary/50"
       )}
     >
       <input
@@ -205,18 +216,18 @@ const ThemeControls = memo(function ThemeControls() {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-lg border border-border bg-card p-6"
+      className="rounded-xl border border-border bg-gradient-to-b from-background to-card p-6 shadow-lg"
     >
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-start gap-6">
-          <div className="flex-1 min-w-[200px] max-w-xs">
-            <label className="text-sm font-medium mb-2 block">Theme</label>
-            <div className="flex flex-col gap-2">
+      <div className="space-y-8">
+        <div className="grid gap-8 md:grid-cols-[300px,1fr]">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium block">Active Theme</label>
               <div className="flex items-center gap-2">
                 <select
                   value={selectedTheme}
                   onChange={(e) => handleThemeChange(e.target.value)}
-                  className="w-full bg-secondary text-secondary-foreground px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full bg-card text-foreground px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border"
                   disabled={isLoading}
                 >
                   <optgroup label="Built-in Themes">
@@ -245,50 +256,57 @@ const ThemeControls = memo(function ThemeControls() {
                 </select>
                 {isLoading && <LoadingSpinner />}
               </div>
-
-              <DropZone onFileDrop={handleFileDrop} />
-
-              {isCustomTheme(selectedTheme) && (
-                <Button
-                  onClick={() => removeCustomTheme(selectedTheme)}
-                  variant="destructive"
-                  icon={Trash2}
-                  className="w-full"
-                >
-                  Remove Theme
-                </Button>
-              )}
             </div>
+
+            <DropZone onFileDrop={handleFileDrop} />
+
+            {isCustomTheme(selectedTheme) && (
+              <Button
+                onClick={() => removeCustomTheme(selectedTheme)}
+                variant="destructive"
+                icon={Trash2}
+                className="w-full"
+              >
+                Remove Custom Theme
+              </Button>
+            )}
           </div>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <ValueAdjuster
               value={brightness}
               onChange={handleBrightnessChange}
               label="Brightness"
+              description="Adjust the overall brightness of the theme"
             />
             <ValueAdjuster
               value={luminance}
               onChange={handleLuminanceChange}
               label="Luminance"
+              description="Fine-tune the perceived brightness"
             />
             <ValueAdjuster
               value={contrast}
               onChange={handleContrastChange}
               label="Contrast"
+              description="Modify the difference between light and dark colors"
             />
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Button onClick={() => handleWCAG("AA")} icon={Zap}>
-            WCAG AA
-          </Button>
-          <Button onClick={() => handleWCAG("AAA")} icon={Zap}>
-            WCAG AAA
-          </Button>
+        <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
+          <Tooltip content="Adjust colors to meet WCAG AA accessibility standards">
+            <Button onClick={() => handleWCAG("AA")} icon={Zap}>
+              WCAG AA
+            </Button>
+          </Tooltip>
+          <Tooltip content="Adjust colors to meet WCAG AAA accessibility standards">
+            <Button onClick={() => handleWCAG("AAA")} icon={Zap}>
+              WCAG AAA
+            </Button>
+          </Tooltip>
           <Button onClick={handleReset} variant="secondary" icon={RefreshCw}>
-            Reset
+            Reset All
           </Button>
           <Button onClick={handleCopy} variant="secondary" icon={Copy}>
             Copy Theme
