@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
+import ColorPreview from "./ColorPreview";
 
 const LoadingSpinner = () => <Loader2 className="h-4 w-4 animate-spin" />;
 
@@ -188,6 +189,7 @@ const LoadingOverlay = () => (
 
 const ThemeControls = memo(function ThemeControls() {
   const {
+    theme, // Add this line to get the current theme
     brightness,
     luminance,
     contrast,
@@ -214,6 +216,49 @@ const ThemeControls = memo(function ThemeControls() {
     } catch (error) {
       toast.error(`Error loading theme: ${error.message}`);
     }
+  };
+
+  const getThemeColors = (theme) => {
+    if (!theme) return {};
+
+    const colors = {
+      workbench: {},
+      semantic: {},
+      tokens: {},
+    };
+
+    // Extract workbench colors
+    if (theme.colors) {
+      Object.entries(theme.colors).forEach(([key, value]) => {
+        colors.workbench[key] = value;
+      });
+    }
+
+    // Extract semantic token colors
+    if (theme.semanticTokenColors) {
+      Object.entries(theme.semanticTokenColors).forEach(([key, value]) => {
+        // Handle both string and object values
+        const colorValue =
+          typeof value === "object" ? value.foreground || value.color : value;
+        if (colorValue) {
+          colors.semantic[key] = colorValue;
+        }
+      });
+    }
+
+    // Extract token colors
+    if (theme.tokenColors) {
+      theme.tokenColors.forEach((token, index) => {
+        if (token.settings?.foreground) {
+          const scope = Array.isArray(token.scope)
+            ? token.scope.join(", ")
+            : token.scope || "default";
+          colors.tokens[`${scope}`] = token.settings.foreground;
+        }
+      });
+    }
+
+    return colors;
   };
 
   return (
@@ -339,6 +384,10 @@ const ThemeControls = memo(function ThemeControls() {
           </Button>
         </div>
       </div>
+      <ColorPreview
+        defaultTheme={getThemeColors(availableThemes[selectedTheme]?.theme)}
+        modifiedTheme={getThemeColors(theme)}
+      />
     </motion.div>
   );
 });
