@@ -98,12 +98,12 @@ function ColorPreview({ defaultTheme, modifiedTheme }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-border bg-card p-6 m-4"
+      className="rounded-xl border border-border bg-card px-4 py-4" // Simplified padding
     >
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <h3 className="text-lg font-semibold">Color Preview</h3>
-          <div className="flex gap-4">
+          <div className="flex flex-col lg:flex-row gap-2 lg:gap-4 w-full lg:w-auto">
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
@@ -115,7 +115,7 @@ function ColorPreview({ defaultTheme, modifiedTheme }) {
                 </option>
               ))}
             </select>
-            <div className="relative w-64">
+            <div className="relative flex-1 lg:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
@@ -171,9 +171,11 @@ function ColorPreview({ defaultTheme, modifiedTheme }) {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: index * 0.05 }}
-                            className="grid grid-cols-[2fr,1fr,1fr] gap-4 items-center"
+                            className="grid grid-cols-[1fr,auto] md:grid-cols-[2fr,1fr,1fr] gap-2 md:gap-4 items-center"
                           >
-                            <div className="text-sm">{color.key}</div>
+                            <div className="text-sm break-all md:break-normal">
+                              {color.key}
+                            </div>
                             <div className="grid grid-cols-2 gap-2">
                               {color.default && (
                                 <ColorButton
@@ -192,7 +194,7 @@ function ColorPreview({ defaultTheme, modifiedTheme }) {
                                 />
                               )}
                             </div>
-                            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                            <div className="hidden md:grid grid-cols-2 gap-2 text-xs font-mono">
                               {color.default && (
                                 <div className="truncate" title={color.default}>
                                   {color.default}

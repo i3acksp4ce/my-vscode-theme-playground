@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useSettings } from "../context/SettingsContext";
+import { useSidebar } from "../context/SidebarContext"; // Add this line
 
 const CodePreview = memo(function CodePreview({
   code,
@@ -13,6 +14,7 @@ const CodePreview = memo(function CodePreview({
   defaultThemeName = "default-theme",
 }) {
   const { settings } = useSettings();
+  const { isCollapsed, isMobileOpen } = useSidebar(); // Add this line
   const modifiedRef = useRef(null);
   const defaultRef = useRef(null);
   const [copied, setCopied] = React.useState(false);
@@ -67,8 +69,7 @@ const CodePreview = memo(function CodePreview({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={cn(
-          "rounded-lg border border-border bg-card overflow-hidden",
-          settings.layout.previewLayout === "stacked" && "grid-cols-1"
+          "rounded-lg border border-border bg-card overflow-hidden"
         )}
       >
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card">
@@ -89,10 +90,13 @@ const CodePreview = memo(function CodePreview({
 
         <div
           className={cn(
-            "grid divide-x divide-border",
-            settings.layout.previewLayout === "side-by-side"
-              ? "grid-cols-2"
-              : "grid-cols-1 divide-y"
+            "grid divide-border",
+            isCollapsed && !isMobileOpen
+              ? "lg:grid-cols-2 grid-cols-1" // Only use 2 columns when sidebar is collapsed on desktop
+              : "2xl:grid-cols-2 grid-cols-1", // Use 2 columns on very large screens when sidebar is visible
+            isCollapsed && !isMobileOpen
+              ? "lg:divide-x divide-y"
+              : "2xl:divide-x divide-y"
           )}
         >
           <div className="overflow-hidden">

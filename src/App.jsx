@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createHighlighter } from "shiki";
 import { motion, AnimatePresence } from "framer-motion";
-import { Github, Settings2, Copy, RefreshCw } from "lucide-react";
+import { Github, Settings2, Copy, RefreshCw, Menu, X } from "lucide-react"; // Add this import
 import { themes } from "./themes";
 import { SAMPLE_CODES } from "./data/sampleCodes";
 import { convertThemeToShikiFormat } from "./utils/themeUtils";
@@ -13,6 +13,7 @@ import { cn } from "./lib/utils";
 import SettingsPanel from "./components/SettingsPanel";
 import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { Toaster } from "sonner";
+import { SidebarProvider, useSidebar } from "./context/SidebarContext"; // Add this line
 
 // Create singleton highlighter instances
 let highlighterInstance = null;
@@ -120,6 +121,8 @@ const getThemeColors = (theme) => {
 
 function Navbar() {
   const { isSettingsOpen, setIsSettingsOpen, settings } = useSettings();
+  const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } =
+    useSidebar();
   const shortcutKey = settings?.shortcuts?.toggleSettings || "K";
 
   return (
@@ -132,6 +135,22 @@ function Navbar() {
         <div className="px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
+              {/* Add sidebar toggle button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if (window.innerWidth < 1024) {
+                    setIsMobileOpen(!isMobileOpen);
+                  } else {
+                    setIsCollapsed(!isCollapsed);
+                  }
+                }}
+                className="p-2 hover:bg-accent rounded-md"
+              >
+                <Menu className="w-5 h-5" />
+              </motion.button>
+
               <motion.h1
                 className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
                 initial={{ opacity: 0 }}
@@ -140,6 +159,7 @@ function Navbar() {
                 VSCode Theme Playground
               </motion.h1>
             </div>
+
             <div className="flex items-center gap-4">
               <motion.a
                 whileHover={{ scale: 1.05 }}
@@ -208,6 +228,7 @@ function CodePreviews({ highlighter, defaultHighlighter }) {
 
 function AppContent() {
   const { theme, selectedTheme, setIsLoading, availableThemes } = useTheme();
+  const { isCollapsed, isMobileOpen } = useSidebar(); // Add isMobileOpen
   const [highlighter, setHighlighter] = useState(null);
   const [defaultHighlighter, setDefaultHighlighter] = useState(null);
   const [error, setError] = useState(null);
@@ -277,18 +298,37 @@ function AppContent() {
       <Navbar />
       <main className="pt-16">
         <ThemeControls />
-        <div className="pl-[360px]">
-          {" "}
-          {/* Add left padding for sidebar */}
-          <ColorPreview
-            defaultTheme={getThemeColors(availableThemes[selectedTheme]?.theme)}
-            modifiedTheme={getThemeColors(theme)}
-          />
-          <CodePreviews
-            highlighter={highlighter}
-            defaultHighlighter={defaultHighlighter}
-          />
-        </div>
+        <motion.div
+          layout
+          animate={{
+            paddingLeft: isCollapsed ? "60px" : "360px",
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 500, // Increased from 300
+            damping: 40, // Increased from 30
+            mass: 0.8, // Added for snappier animation
+          }}
+          className={cn(
+            "will-change-[padding] transition-gpu", // Added hardware acceleration
+            "p-4", // Consistent padding
+            // Remove padding on mobile when sidebar is open
+            isMobileOpen && "!pl-4"
+          )}
+        >
+          <div className="grid grid-cols-1 gap-6">
+            <ColorPreview
+              defaultTheme={getThemeColors(
+                availableThemes[selectedTheme]?.theme
+              )}
+              modifiedTheme={getThemeColors(theme)}
+            />
+            <CodePreviews
+              highlighter={highlighter}
+              defaultHighlighter={defaultHighlighter}
+            />
+          </div>
+        </motion.div>
       </main>
     </div>
   );
@@ -298,8 +338,10 @@ function App() {
   return (
     <SettingsProvider>
       <ThemeProvider defaultTheme={defaultTheme}>
-        <AppContent />
-        <Toaster position="top-right" />
+        <SidebarProvider>
+          <AppContent />
+          <Toaster position="top-right" />
+        </SidebarProvider>
       </ThemeProvider>
     </SettingsProvider>
   );

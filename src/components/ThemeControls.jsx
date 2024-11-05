@@ -1,4 +1,4 @@
-import React, { memo, useRef, useState } from "react";
+import React, { memo, useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 import {
@@ -16,6 +16,7 @@ import {
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import ColorPreview from "./ColorPreview";
+import { useSidebar } from "../context/SidebarContext"; // Import the sidebar context hook
 
 const LoadingSpinner = () => <Loader2 className="h-4 w-4 animate-spin" />;
 
@@ -190,9 +191,10 @@ const LoadingOverlay = () => (
 );
 
 const ThemeControls = memo(function ThemeControls() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
+
   const {
-    theme, // Add this line to get the current theme
+    theme,
     brightness,
     luminance,
     contrast,
@@ -265,161 +267,171 @@ const ThemeControls = memo(function ThemeControls() {
   };
 
   return (
-    <motion.div
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      className={cn(
-        "fixed left-0 top-16 bottom-0 z-50 w-[360px] bg-card border-r border-border shadow-lg transition-all duration-300",
-        isCollapsed && "w-[60px]" // Collapsed state
-      )}
-    >
-      {isLoading && <LoadingOverlay />}
-      <div className="h-full flex flex-col">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Theme Settings</h3>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-accent rounded-md"
-          >
-            {isCollapsed ? (
-              <ChevronRight className="w-4 h-4" />
-            ) : (
-              <ChevronLeft className="w-4 h-4" />
-            )}
-          </motion.button>
-        </div>
+    <>
+      <motion.div
+        initial={false}
+        animate={{
+          width: isCollapsed ? (isMobileOpen ? "100%" : "60px") : "360px",
+          x: isCollapsed && !isMobileOpen ? "-300px" : 0,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 500, // Increased from 300
+          damping: 40, // Increased from 30
+          mass: 0.8, // Added for snappier animation
+        }}
+        className="fixed left-0 top-16 bottom-0 z-[60] bg-card border-r border-border shadow-lg will-change-transform" // Added will-change-transform
+      >
+        <div className="h-full flex flex-col relative">
+          <div className="p-4 border-b border-border">
+            <h3
+              className={cn(
+                "text-lg font-semibold transition-opacity duration-200",
+                isCollapsed && !isMobileOpen && "opacity-0"
+              )}
+            >
+              Theme Settings
+            </h3>
+          </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium block">Active Theme</label>
-              <div className="flex items-center gap-2">
-                <select
-                  value={selectedTheme}
-                  onChange={(e) => handleThemeChange(e.target.value)}
-                  className="w-full bg-card text-foreground px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border disabled:opacity-50"
+          {(!isCollapsed || isMobileOpen) && (
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium block">
+                    Active Theme
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selectedTheme}
+                      onChange={(e) => handleThemeChange(e.target.value)}
+                      className="w-full bg-card text-foreground px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 border border-border disabled:opacity-50"
+                      disabled={isLoading}
+                    >
+                      <optgroup label="Built-in Themes">
+                        {Object.entries(availableThemes)
+                          .filter(([id]) => !isCustomTheme(id))
+                          .map(([id, { name }]) => (
+                            <option key={id} value={id}>
+                              {name}
+                            </option>
+                          ))}
+                      </optgroup>
+                      {Object.keys(availableThemes).some((id) =>
+                        isCustomTheme(id)
+                      ) && (
+                        <optgroup label="Custom Themes">
+                          {Object.entries(availableThemes)
+                            .filter(([id]) => isCustomTheme(id))
+                            .map(([id, { name }]) => (
+                              <option key={id} value={id}>
+                                {name}
+                                {isCustomTheme(id) && " (Custom)"}
+                              </option>
+                            ))}
+                        </optgroup>
+                      )}
+                    </select>
+                  </div>
+                </div>
+
+                <DropZone onFileDrop={handleFileDrop} />
+
+                {isCustomTheme(selectedTheme) && (
+                  <Button
+                    onClick={() => removeCustomTheme(selectedTheme)}
+                    variant="destructive"
+                    icon={Trash2}
+                    className="w-full"
+                    disabled={isLoading}
+                  >
+                    Remove Custom Theme
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid gap-4">
+                <ValueAdjuster
+                  value={contrast}
+                  onChange={handleContrastChange}
+                  label="Contrast"
+                  description="Modify the difference between light and dark colors"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Tooltip content="Adjust colors to meet WCAG AA accessibility standards">
+                  <Button
+                    onClick={() => handleWCAG("AA")}
+                    icon={Zap}
+                    disabled={isLoading}
+                  >
+                    WCAG AA
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Adjust colors to meet WCAG AAA accessibility standards">
+                  <Button
+                    onClick={() => handleWCAG("AAA")}
+                    icon={Zap}
+                    disabled={isLoading}
+                  >
+                    WCAG AAA
+                  </Button>
+                </Tooltip>
+                <Button
+                  onClick={handleReset}
+                  variant="secondary"
+                  icon={RefreshCw}
                   disabled={isLoading}
                 >
-                  <optgroup label="Built-in Themes">
-                    {Object.entries(availableThemes)
-                      .filter(([id]) => !isCustomTheme(id))
-                      .map(([id, { name }]) => (
-                        <option key={id} value={id}>
-                          {name}
-                        </option>
-                      ))}
-                  </optgroup>
-                  {Object.keys(availableThemes).some((id) =>
-                    isCustomTheme(id)
-                  ) && (
-                    <optgroup label="Custom Themes">
-                      {Object.entries(availableThemes)
-                        .filter(([id]) => isCustomTheme(id))
-                        .map(([id, { name }]) => (
-                          <option key={id} value={id}>
-                            {name}
-                            {isCustomTheme(id) && " (Custom)"}
-                          </option>
-                        ))}
-                    </optgroup>
-                  )}
-                </select>
+                  Reset All
+                </Button>
+                <Button
+                  onClick={handleCopy}
+                  variant="secondary"
+                  icon={Copy}
+                  disabled={isLoading}
+                >
+                  Copy Theme
+                </Button>
+              </div>
+
+              <div className="grid gap-4 border-t border-border pt-4">
+                <h4 className="text-sm font-medium text-muted-foreground">
+                  Additional Adjustments
+                </h4>
+                <ValueAdjuster
+                  value={brightness}
+                  onChange={handleBrightnessChange}
+                  label="Brightness"
+                  description="Adjust the overall brightness of the theme"
+                  disabled={isLoading}
+                />
+                <ValueAdjuster
+                  value={luminance}
+                  onChange={handleLuminanceChange}
+                  label="Luminance"
+                  description="Fine-tune the perceived brightness"
+                  disabled={isLoading}
+                />
               </div>
             </div>
-
-            <DropZone onFileDrop={handleFileDrop} />
-
-            {isCustomTheme(selectedTheme) && (
-              <Button
-                onClick={() => removeCustomTheme(selectedTheme)}
-                variant="destructive"
-                icon={Trash2}
-                className="w-full"
-                disabled={isLoading}
-              >
-                Remove Custom Theme
-              </Button>
-            )}
-          </div>
-
-          {/* Contrast Controls - Moved to top */}
-          <div className="grid gap-4">
-            <ValueAdjuster
-              value={contrast}
-              onChange={handleContrastChange}
-              label="Contrast"
-              description="Modify the difference between light and dark colors"
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3">
-            <Tooltip content="Adjust colors to meet WCAG AA accessibility standards">
-              <Button
-                onClick={() => handleWCAG("AA")}
-                icon={Zap}
-                disabled={isLoading}
-              >
-                WCAG AA
-              </Button>
-            </Tooltip>
-            <Tooltip content="Adjust colors to meet WCAG AAA accessibility standards">
-              <Button
-                onClick={() => handleWCAG("AAA")}
-                icon={Zap}
-                disabled={isLoading}
-              >
-                WCAG AAA
-              </Button>
-            </Tooltip>
-            <Button
-              onClick={handleReset}
-              variant="secondary"
-              icon={RefreshCw}
-              disabled={isLoading}
-            >
-              Reset All
-            </Button>
-            <Button
-              onClick={handleCopy}
-              variant="secondary"
-              icon={Copy}
-              disabled={isLoading}
-            >
-              Copy Theme
-            </Button>
-          </div>
-
-          {/* Additional Controls - Moved to bottom */}
-          <div className="grid gap-4 border-t border-border pt-4">
-            <h4 className="text-sm font-medium text-muted-foreground">
-              Additional Adjustments
-            </h4>
-            <ValueAdjuster
-              value={brightness}
-              onChange={handleBrightnessChange}
-              label="Brightness"
-              description="Adjust the overall brightness of the theme"
-              disabled={isLoading}
-            />
-            <ValueAdjuster
-              value={luminance}
-              onChange={handleLuminanceChange}
-              label="Luminance"
-              description="Fine-tune the perceived brightness"
-              disabled={isLoading}
-            />
-          </div>
+          )}
         </div>
-      </div>
-      <ColorPreview
-        defaultTheme={getThemeColors(availableThemes[selectedTheme]?.theme)}
-        modifiedTheme={getThemeColors(theme)}
-      />
-    </motion.div>
+      </motion.div>
+
+      {/* Mobile overlay */}
+      {isMobileOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[59]"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+    </>
   );
 });
 
