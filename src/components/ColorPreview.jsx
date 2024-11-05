@@ -98,7 +98,7 @@ function ColorPreview({ defaultTheme, modifiedTheme }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-8 rounded-xl border border-border bg-card p-6"
+      className="rounded-xl border border-border bg-card p-6 m-4"
     >
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">

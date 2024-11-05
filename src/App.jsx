@@ -7,6 +7,7 @@ import { SAMPLE_CODES } from "./data/sampleCodes";
 import { convertThemeToShikiFormat } from "./utils/themeUtils";
 import ThemeControls from "./components/ThemeControls";
 import CodePreview from "./components/CodePreview";
+import ColorPreview from "./components/ColorPreview"; // Add this line
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { cn } from "./lib/utils";
 import SettingsPanel from "./components/SettingsPanel";
@@ -74,9 +75,51 @@ async function getHighlighter(theme, isDefault = false) {
 
 const defaultTheme = themes.default.theme;
 
+// Add this utility function
+const getThemeColors = (theme) => {
+  if (!theme) return {};
+
+  const colors = {
+    workbench: {},
+    semantic: {},
+    tokens: {},
+  };
+
+  // Extract workbench colors
+  if (theme.colors) {
+    Object.entries(theme.colors).forEach(([key, value]) => {
+      colors.workbench[key] = value;
+    });
+  }
+
+  // Extract semantic token colors
+  if (theme.semanticTokenColors) {
+    Object.entries(theme.semanticTokenColors).forEach(([key, value]) => {
+      const colorValue =
+        typeof value === "object" ? value.foreground || value.color : value;
+      if (colorValue) {
+        colors.semantic[key] = colorValue;
+      }
+    });
+  }
+
+  // Extract token colors
+  if (theme.tokenColors) {
+    theme.tokenColors.forEach((token) => {
+      if (token.settings?.foreground) {
+        const scope = Array.isArray(token.scope)
+          ? token.scope.join(", ")
+          : token.scope || "default";
+        colors.tokens[`${scope}`] = token.settings.foreground;
+      }
+    });
+  }
+
+  return colors;
+};
+
 function Navbar() {
   const { isSettingsOpen, setIsSettingsOpen, settings } = useSettings();
-
   const shortcutKey = settings?.shortcuts?.toggleSettings || "K";
 
   return (
@@ -86,7 +129,7 @@ function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b border-border z-[97]"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
               <motion.h1
@@ -140,7 +183,7 @@ function CodePreviews({ highlighter, defaultHighlighter }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="grid grid-cols-1 2xl:grid-cols-2 gap-6 p-4"
+      className="grid grid-cols-1 2xl:grid-cols-2 gap-6 p-4" // Removed ml-[360px]
     >
       {Object.entries(SAMPLE_CODES).map(([lang, code], index) => (
         <motion.div
@@ -232,15 +275,15 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <main className="pt-20 pb-16">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <ThemeControls />
-          </motion.div>
+      <main className="pt-16">
+        <ThemeControls />
+        <div className="pl-[360px]">
+          {" "}
+          {/* Add left padding for sidebar */}
+          <ColorPreview
+            defaultTheme={getThemeColors(availableThemes[selectedTheme]?.theme)}
+            modifiedTheme={getThemeColors(theme)}
+          />
           <CodePreviews
             highlighter={highlighter}
             defaultHighlighter={defaultHighlighter}

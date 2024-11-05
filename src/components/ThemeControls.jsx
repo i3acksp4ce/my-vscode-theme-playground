@@ -10,6 +10,8 @@ import {
   Upload,
   Trash2,
   Info,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "sonner";
@@ -188,6 +190,7 @@ const LoadingOverlay = () => (
 );
 
 const ThemeControls = memo(function ThemeControls() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const {
     theme, // Add this line to get the current theme
     brightness,
@@ -263,13 +266,32 @@ const ThemeControls = memo(function ThemeControls() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-border bg-gradient-to-b from-background to-card p-6 shadow-lg relative"
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      className={cn(
+        "fixed left-0 top-16 bottom-0 z-50 w-[360px] bg-card border-r border-border shadow-lg transition-all duration-300",
+        isCollapsed && "w-[60px]" // Collapsed state
+      )}
     >
       {isLoading && <LoadingOverlay />}
-      <div className="space-y-8">
-        <div className="grid gap-8 md:grid-cols-[300px,1fr]">
+      <div className="h-full flex flex-col">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Theme Settings</h3>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 hover:bg-accent rounded-md"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </motion.button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium block">Active Theme</label>
@@ -322,7 +344,7 @@ const ThemeControls = memo(function ThemeControls() {
             )}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4">
             <ValueAdjuster
               value={brightness}
               onChange={handleBrightnessChange}
@@ -345,43 +367,43 @@ const ThemeControls = memo(function ThemeControls() {
               disabled={isLoading}
             />
           </div>
-        </div>
 
-        <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
-          <Tooltip content="Adjust colors to meet WCAG AA accessibility standards">
+          <div className="flex flex-wrap gap-3">
+            <Tooltip content="Adjust colors to meet WCAG AA accessibility standards">
+              <Button
+                onClick={() => handleWCAG("AA")}
+                icon={Zap}
+                disabled={isLoading}
+              >
+                WCAG AA
+              </Button>
+            </Tooltip>
+            <Tooltip content="Adjust colors to meet WCAG AAA accessibility standards">
+              <Button
+                onClick={() => handleWCAG("AAA")}
+                icon={Zap}
+                disabled={isLoading}
+              >
+                WCAG AAA
+              </Button>
+            </Tooltip>
             <Button
-              onClick={() => handleWCAG("AA")}
-              icon={Zap}
+              onClick={handleReset}
+              variant="secondary"
+              icon={RefreshCw}
               disabled={isLoading}
             >
-              WCAG AA
+              Reset All
             </Button>
-          </Tooltip>
-          <Tooltip content="Adjust colors to meet WCAG AAA accessibility standards">
             <Button
-              onClick={() => handleWCAG("AAA")}
-              icon={Zap}
+              onClick={handleCopy}
+              variant="secondary"
+              icon={Copy}
               disabled={isLoading}
             >
-              WCAG AAA
+              Copy Theme
             </Button>
-          </Tooltip>
-          <Button
-            onClick={handleReset}
-            variant="secondary"
-            icon={RefreshCw}
-            disabled={isLoading}
-          >
-            Reset All
-          </Button>
-          <Button
-            onClick={handleCopy}
-            variant="secondary"
-            icon={Copy}
-            disabled={isLoading}
-          >
-            Copy Theme
-          </Button>
+          </div>
         </div>
       </div>
       <ColorPreview
