@@ -36,7 +36,7 @@ const ValueAdjuster = ({
   description,
   disabled,
 }) => {
-  const steps = [5, 2];
+  const steps = [5, 10, 15, 20]; // Updated step values
 
   return (
     <motion.div
@@ -56,14 +56,14 @@ const ValueAdjuster = ({
           {value === 0 ? "Default" : `${value > 0 ? "+" : ""}${value}%`}
         </span>
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-wrap gap-1">
         {steps.map((step) => (
-          <div key={step} className="flex gap-1">
+          <div key={step} className="flex-1 min-w-[60px]">
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => onChange(Math.max(-100, value - step))}
               disabled={disabled}
-              className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
+              className="w-full px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
             >
               -{step}
             </motion.button>
@@ -71,7 +71,7 @@ const ValueAdjuster = ({
               whileTap={{ scale: 0.97 }}
               onClick={() => onChange(Math.min(100, value + step))}
               disabled={disabled}
-              className="flex-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
+              className="w-full mt-1 px-2 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs font-medium disabled:opacity-50"
             >
               +{step}
             </motion.button>
@@ -344,21 +344,8 @@ const ThemeControls = memo(function ThemeControls() {
             )}
           </div>
 
+          {/* Contrast Controls - Moved to top */}
           <div className="grid gap-4">
-            <ValueAdjuster
-              value={brightness}
-              onChange={handleBrightnessChange}
-              label="Brightness"
-              description="Adjust the overall brightness of the theme"
-              disabled={isLoading}
-            />
-            <ValueAdjuster
-              value={luminance}
-              onChange={handleLuminanceChange}
-              label="Luminance"
-              description="Fine-tune the perceived brightness"
-              disabled={isLoading}
-            />
             <ValueAdjuster
               value={contrast}
               onChange={handleContrastChange}
@@ -368,6 +355,7 @@ const ThemeControls = memo(function ThemeControls() {
             />
           </div>
 
+          {/* Action Buttons */}
           <div className="flex flex-wrap gap-3">
             <Tooltip content="Adjust colors to meet WCAG AA accessibility standards">
               <Button
@@ -403,6 +391,27 @@ const ThemeControls = memo(function ThemeControls() {
             >
               Copy Theme
             </Button>
+          </div>
+
+          {/* Additional Controls - Moved to bottom */}
+          <div className="grid gap-4 border-t border-border pt-4">
+            <h4 className="text-sm font-medium text-muted-foreground">
+              Additional Adjustments
+            </h4>
+            <ValueAdjuster
+              value={brightness}
+              onChange={handleBrightnessChange}
+              label="Brightness"
+              description="Adjust the overall brightness of the theme"
+              disabled={isLoading}
+            />
+            <ValueAdjuster
+              value={luminance}
+              onChange={handleLuminanceChange}
+              label="Luminance"
+              description="Fine-tune the perceived brightness"
+              disabled={isLoading}
+            />
           </div>
         </div>
       </div>

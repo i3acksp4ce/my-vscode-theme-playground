@@ -8,7 +8,7 @@ function ColorPreview({ defaultTheme, modifiedTheme }) {
   const [expandedCategories, setExpandedCategories] = useState(
     new Set(["workbench"])
   );
-  const [selectedType, setSelectedType] = useState("workbench");
+  const [selectedType, setSelectedType] = useState("tokens");
 
   const colorTypes = {
     workbench: "Workbench Colors",
