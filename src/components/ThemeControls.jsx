@@ -15,7 +15,6 @@ import {
   Eye, // Add this import
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { toast } from "sonner";
 import ColorPreview from "./ColorPreview";
 import { useSidebar } from "../context/SidebarContext"; // Import the sidebar context hook
 import { boostThemeContrast } from "../utils/themeUtils";
@@ -137,7 +136,7 @@ const DropZone = ({ onFileDrop }) => {
     if (file?.type === "application/json") {
       onFileDrop(file);
     } else {
-      toast.error("Please drop a JSON file");
+      console.error("Please drop a JSON file");
     }
   };
 
@@ -222,7 +221,7 @@ const ThemeControls = memo(function ThemeControls() {
       const themeData = JSON.parse(text);
       await addCustomTheme(themeData, file.name.replace(/\.json$/, ""));
     } catch (error) {
-      toast.error(`Error loading theme: ${error.message}`);
+      console.error(`Error loading theme: ${error.message}`);
     }
   };
 
@@ -290,7 +289,6 @@ const ThemeControls = memo(function ThemeControls() {
       };
       setTheme(updatedTheme);
       setEditorBackground(color);
-      toast.success("Background color updated");
     },
     [theme, setTheme]
   );
@@ -496,7 +494,7 @@ const ColorInput = ({ label, value, onChange, onApply, description }) => {
     // Validate hex color format
     const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(tempColor);
     if (!isValidHex) {
-      toast.error("Please enter a valid hex color (e.g., #000000)");
+      console.error("Please enter a valid hex color (e.g., #000000)");
       return;
     }
     onApply(tempColor);

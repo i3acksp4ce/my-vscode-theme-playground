@@ -5,8 +5,8 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+// Remove toast import
 import { useDebounce } from "../hooks/useDebounce";
-import { toast } from "sonner";
 import {
   adjustBrightnessForTheme,
   adjustLuminanceForTheme,
@@ -111,7 +111,7 @@ export function ThemeProvider({ children, defaultTheme }) {
       const newTheme = allThemes[themeId]?.theme;
 
       if (!newTheme) {
-        toast.error("Theme not found");
+        console.error("Theme not found");
         setIsLoading(false);
         return;
       }
@@ -161,10 +161,9 @@ export function ThemeProvider({ children, defaultTheme }) {
 
         // Auto-select the new theme
         handleThemeChange(themeId);
-        toast.success(`Theme "${fileName}" added successfully`);
         return themeId;
       } catch (error) {
-        toast.error(`Failed to add theme: ${error.message}`);
+        console.error(`Failed to add theme: ${error.message}`);
         throw error;
       }
     },
@@ -184,7 +183,6 @@ export function ThemeProvider({ children, defaultTheme }) {
       if (selectedTheme === themeId) {
         handleThemeChange("default");
       }
-      toast.success("Custom theme removed");
     },
     [selectedTheme, handleThemeChange]
   );

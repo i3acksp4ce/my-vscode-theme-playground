@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { useSettings } from "../context/SettingsContext";
 import { cn } from "../lib/utils";
-import { toast } from "sonner";
 
 const SettingsPanel = ({ isOpen, onClose }) => {
   const { settings, updateSettings, resetSettings } = useSettings();
@@ -26,7 +25,6 @@ const SettingsPanel = ({ isOpen, onClose }) => {
 
   const handleThemeModeChange = (mode) => {
     updateSettings("appearance", { theme: mode });
-    toast.success(`Theme mode changed to ${mode}`);
   };
 
   const handleFontSizeChange = (e) => {
@@ -39,7 +37,6 @@ const SettingsPanel = ({ isOpen, onClose }) => {
 
   const handleReset = () => {
     resetSettings();
-    toast.success("Settings reset to defaults");
   };
 
   return (

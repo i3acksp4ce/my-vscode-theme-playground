@@ -12,7 +12,6 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { cn } from "./lib/utils";
 import SettingsPanel from "./components/SettingsPanel";
 import { SettingsProvider, useSettings } from "./context/SettingsContext";
-import { Toaster } from "sonner";
 import { SidebarProvider, useSidebar } from "./context/SidebarContext"; // Add this line
 
 // Create singleton highlighter instances
@@ -340,7 +339,6 @@ function App() {
       <ThemeProvider defaultTheme={defaultTheme}>
         <SidebarProvider>
           <AppContent />
-          <Toaster position="top-right" />
         </SidebarProvider>
       </ThemeProvider>
     </SettingsProvider>
