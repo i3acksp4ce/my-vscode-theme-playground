@@ -189,6 +189,16 @@ export function ThemeProvider({ children, defaultTheme }) {
     [selectedTheme, handleThemeChange]
   );
 
+  const handleEditorBackgroundChange = useCallback((color) => {
+    setTheme((prevTheme) => ({
+      ...prevTheme,
+      colors: {
+        ...prevTheme.colors,
+        "editor.background": color,
+      },
+    }));
+  }, []);
+
   return (
     <ThemeContext.Provider
       value={{
@@ -211,6 +221,7 @@ export function ThemeProvider({ children, defaultTheme }) {
         isCustomTheme: (id) => id.startsWith("custom-"),
         isLoading,
         setIsLoading,
+        handleEditorBackgroundChange,
       }}
     >
       {children}
