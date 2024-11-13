@@ -1,4 +1,4 @@
-import React, { memo, useRef, useState, useEffect } from "react";
+import React, { memo, useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 import {
@@ -17,6 +17,7 @@ import { cn } from "../lib/utils";
 import { toast } from "sonner";
 import ColorPreview from "./ColorPreview";
 import { useSidebar } from "../context/SidebarContext"; // Import the sidebar context hook
+import { boostThemeContrast } from "../utils/themeUtils";
 
 const LoadingSpinner = () => <Loader2 className="h-4 w-4 animate-spin" />;
 
@@ -211,6 +212,7 @@ const ThemeControls = memo(function ThemeControls() {
     addCustomTheme,
     removeCustomTheme,
     isCustomTheme,
+    setTheme,
   } = useTheme();
 
   const handleFileDrop = async (file) => {
@@ -265,6 +267,11 @@ const ThemeControls = memo(function ThemeControls() {
 
     return colors;
   };
+
+  const handleBoostContrast = useCallback(() => {
+    const boostedTheme = boostThemeContrast(theme);
+    setTheme(boostedTheme);
+  }, [theme, setTheme]);
 
   return (
     <>
@@ -361,6 +368,15 @@ const ThemeControls = memo(function ThemeControls() {
               </div>
 
               <div className="flex flex-wrap gap-3">
+                <Tooltip content="Automatically optimize contrast ratio">
+                  <Button
+                    onClick={handleBoostContrast}
+                    icon={Zap}
+                    disabled={isLoading}
+                  >
+                    Boost Contrast
+                  </Button>
+                </Tooltip>
                 <Tooltip content="Adjust colors to meet WCAG AA accessibility standards">
                   <Button
                     onClick={() => handleWCAG("AA")}

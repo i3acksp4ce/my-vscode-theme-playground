@@ -193,6 +193,7 @@ export function ThemeProvider({ children, defaultTheme }) {
     <ThemeContext.Provider
       value={{
         theme,
+        setTheme, // Add setTheme to the context
         brightness,
         luminance,
         contrast,
