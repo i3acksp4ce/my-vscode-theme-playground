@@ -12,12 +12,38 @@ export function convertThemeToShikiFormat(theme) {
   };
 }
 
+// New helper functions
+function hasOpacity(color) {
+  return tinycolor(color).getAlpha() < 1;
+}
+
+function adjustOpacity(originalColor, adjustmentFn) {
+  const color = tinycolor(originalColor);
+  if (!hasOpacity(color)) {
+    // For non-transparent colors, directly apply the color adjustment
+    return adjustmentFn(color);
+  }
+  // For transparent colors, preserve color and only adjust alpha
+  const alpha = color.getAlpha();
+  const newAlpha = Math.max(0, Math.min(1, adjustmentFn(alpha)));
+  return color.setAlpha(newAlpha).toRgbString();
+}
+
 export function adjustBrightnessForTheme(theme, value) {
   const newTheme = JSON.parse(JSON.stringify(theme));
   newTheme.tokenColors = newTheme.tokenColors.map((token) => {
     if (token.settings && token.settings.foreground) {
-      const color = tinycolor(token.settings.foreground);
-      token.settings.foreground = color.brighten(value).toHexString();
+      token.settings.foreground = adjustOpacity(
+        token.settings.foreground,
+        (colorOrAlpha) => {
+          if (typeof colorOrAlpha === "number") {
+            // Handle alpha adjustment
+            return colorOrAlpha * (1 + value / 100);
+          }
+          // Handle color adjustment
+          return colorOrAlpha.brighten(value).toHexString();
+        }
+      );
     }
     return token;
   });
@@ -28,10 +54,17 @@ export function adjustLuminanceForTheme(theme, value) {
   const newTheme = JSON.parse(JSON.stringify(theme));
   newTheme.tokenColors = newTheme.tokenColors.map((token) => {
     if (token.settings && token.settings.foreground) {
-      const color = tinycolor(token.settings.foreground);
-      const hsl = color.toHsl();
-      hsl.l = Math.max(0, Math.min(1, hsl.l + value / 100));
-      token.settings.foreground = tinycolor(hsl).toHexString();
+      token.settings.foreground = adjustOpacity(
+        token.settings.foreground,
+        (colorOrAlpha) => {
+          if (typeof colorOrAlpha === "number") {
+            // Handle alpha adjustment
+            return colorOrAlpha * (1 + value / 100);
+          }
+          // Handle color adjustment
+          return colorOrAlpha.lighten(value).toHexString();
+        }
+      );
     }
     return token;
   });
@@ -44,24 +77,31 @@ export function adjustContrastForTheme(theme, value) {
 
   newTheme.tokenColors = newTheme.tokenColors.map((token) => {
     if (token.settings && token.settings.foreground) {
-      const color = tinycolor(token.settings.foreground);
-      const rgb = color.toRgb();
-
-      // Calculate relative to middle gray (128)
-      rgb.r = Math.min(
-        255,
-        Math.max(0, Math.round(128 + (rgb.r - 128) * factor))
+      token.settings.foreground = adjustOpacity(
+        token.settings.foreground,
+        (colorOrAlpha) => {
+          if (typeof colorOrAlpha === "number") {
+            // Handle alpha adjustment
+            return colorOrAlpha * factor;
+          }
+          // Handle color adjustment
+          const rgb = colorOrAlpha.toRgb();
+          return tinycolor({
+            r: Math.min(
+              255,
+              Math.max(0, Math.round(128 + (rgb.r - 128) * factor))
+            ),
+            g: Math.min(
+              255,
+              Math.max(0, Math.round(128 + (rgb.g - 128) * factor))
+            ),
+            b: Math.min(
+              255,
+              Math.max(0, Math.round(128 + (rgb.b - 128) * factor))
+            ),
+          }).toHexString();
+        }
       );
-      rgb.g = Math.min(
-        255,
-        Math.max(0, Math.round(128 + (rgb.g - 128) * factor))
-      );
-      rgb.b = Math.min(
-        255,
-        Math.max(0, Math.round(128 + (rgb.b - 128) * factor))
-      );
-
-      token.settings.foreground = tinycolor(rgb).toHexString();
     }
     return token;
   });
@@ -160,9 +200,9 @@ export function boostThemeContrast(theme) {
           true
         );
         token.settings.foreground = adjustedColor.toHexString();
-      } else if (currentContrast >= 6.5 && currentContrast < 14.5) {
+      } else if (currentContrast >= 6.5 && currentContrast < 15) {
         // Case 2: Increase by exactly 0.5 contrast ratio
-        const targetContrast = Math.min(currentContrast + 0.8, 14.5);
+        const targetContrast = Math.min(currentContrast + 0.5, 15);
         let tempTheme = {
           tokenColors: [{ settings: { foreground: color.toHexString() } }],
         };
