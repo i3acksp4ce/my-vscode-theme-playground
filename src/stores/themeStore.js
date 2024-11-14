@@ -1,4 +1,5 @@
 import { proxy } from "valtio";
+import { deepClone } from "valtio/utils";
 import { themes } from "../themes";
 import {
   adjustBrightnessForTheme,
@@ -6,6 +7,7 @@ import {
   adjustContrastForTheme,
   improveWCAG,
 } from "../utils/themeUtils";
+import { highlighterStore } from "./highlighterStore"; // Add this import at the top
 
 export const themeStore = proxy({
   theme: themes.default.theme,
@@ -16,7 +18,6 @@ export const themeStore = proxy({
   isLoading: false,
   originalTheme: themes.default.theme,
   customThemes: {},
-
   availableThemes: {
     ...themes,
   },
@@ -24,7 +25,7 @@ export const themeStore = proxy({
   updateBrightness(value) {
     themeStore.brightness = value;
     if (value === 0) {
-      themeStore.theme = JSON.parse(JSON.stringify(themeStore.originalTheme));
+      themeStore.theme = deepClone(themeStore.originalTheme);
       return;
     }
     themeStore.theme = adjustBrightnessForTheme(
@@ -36,7 +37,7 @@ export const themeStore = proxy({
   updateLuminance(value) {
     themeStore.luminance = value;
     if (value === 0) {
-      themeStore.theme = JSON.parse(JSON.stringify(themeStore.originalTheme));
+      themeStore.theme = deepClone(themeStore.originalTheme);
       return;
     }
     themeStore.theme = adjustLuminanceForTheme(themeStore.originalTheme, value);
@@ -45,41 +46,57 @@ export const themeStore = proxy({
   updateContrast(value) {
     themeStore.contrast = value;
     if (value === 0) {
-      themeStore.theme = JSON.parse(JSON.stringify(themeStore.originalTheme));
+      // Use deepClone for complete isolation
+      themeStore.theme = deepClone(themeStore.originalTheme);
       return;
     }
-    themeStore.theme = adjustContrastForTheme(themeStore.originalTheme, value);
+    // Create new theme instance for contrast adjustment
+    themeStore.theme = adjustContrastForTheme(
+      deepClone(themeStore.originalTheme),
+      value
+    );
   },
 
   handleWCAG(level) {
     themeStore.theme = improveWCAG(themeStore.theme, level);
   },
 
-  handleReset() {
-    // First try to get theme from the themes object
-    let currentTheme = null;
+  async handleReset() {
+    // Clear any cached state
+    themeStore.isLoading = true;
 
-    if (themeStore.selectedTheme && themes[themeStore.selectedTheme]) {
-      currentTheme = themes[themeStore.selectedTheme].theme;
-    } else if (
-      themeStore.selectedTheme &&
-      themeStore.customThemes[themeStore.selectedTheme]
-    ) {
-      currentTheme = themeStore.customThemes[themeStore.selectedTheme].theme;
+    // Get fresh copy of theme from source
+    let currentTheme = null;
+    const selectedThemeId = themeStore.selectedTheme;
+
+    // Create completely new theme instance
+    if (themes[selectedThemeId]) {
+      // For built-in themes
+      currentTheme = deepClone(themes[selectedThemeId].theme);
+    } else if (themeStore.customThemes[selectedThemeId]) {
+      // For custom themes
+      currentTheme = deepClone(themeStore.customThemes[selectedThemeId].theme);
     } else {
-      // Fallback to default theme if nothing else works
-      currentTheme = themes.default.theme;
+      // Fallback to default
+      currentTheme = deepClone(themes.default.theme);
     }
 
-    // Update state
+    // Reset all state with new references
     themeStore.theme = currentTheme;
-    themeStore.originalTheme = currentTheme;
+    themeStore.originalTheme = deepClone(currentTheme);
+
+    // Reset all adjustments
     themeStore.brightness = 0;
     themeStore.luminance = 0;
     themeStore.contrast = 0;
 
-    // Update available themes to ensure they're in sync
+    // Force theme update
     themeStore.updateAvailableThemes();
+
+    // Reset highlighters to ensure clean state
+    await highlighterStore.resetHighlighters();
+
+    themeStore.isLoading = false;
   },
 
   handleCopy() {

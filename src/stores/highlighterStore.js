@@ -29,26 +29,16 @@ export const highlighterStore = proxy({
   async getHighlighter(theme, isDefault = false) {
     try {
       if (isDefault) {
-        if (!defaultHighlighterInstance) {
-          defaultHighlighterInstance = await createHighlighter({
-            themes: [theme],
-            langs: supportedLanguages,
-          });
-        } else {
-          await defaultHighlighterInstance.loadTheme(theme);
-          defaultHighlighterInstance.setTheme(theme.name);
-        }
+        defaultHighlighterInstance = await createHighlighter({
+          themes: [theme],
+          langs: supportedLanguages,
+        });
         return defaultHighlighterInstance;
       } else {
-        if (!highlighterInstance) {
-          highlighterInstance = await createHighlighter({
-            themes: [theme],
-            langs: supportedLanguages,
-          });
-        } else {
-          await highlighterInstance.loadTheme(theme);
-          highlighterInstance.setTheme(theme.name);
-        }
+        highlighterInstance = await createHighlighter({
+          themes: [theme],
+          langs: supportedLanguages,
+        });
         return highlighterInstance;
       }
     } catch (error) {
@@ -87,13 +77,23 @@ export const highlighterStore = proxy({
     }
   },
 
+  async resetHighlighters() {
+    // First dispose existing highlighters
+    this.dispose();
+
+    // Reset the instances
+    highlighterInstance = null;
+    defaultHighlighterInstance = null;
+
+    // Reinitialize with fresh instances
+    await this.initializeHighlighters();
+  },
+
   dispose() {
     if (highlighterInstance) {
-      highlighterInstance.dispose();
       highlighterInstance = null;
     }
     if (defaultHighlighterInstance) {
-      defaultHighlighterInstance.dispose();
       defaultHighlighterInstance = null;
     }
     this.highlighter = null;

@@ -3,39 +3,17 @@ import { motion } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 import { cn } from "../lib/utils";
 
-const CodePreview = memo(function CodePreview({
+const CodePreview = ({
   code,
   lang,
   highlighter,
   defaultHighlighter,
   themeName = "custom-theme",
   defaultThemeName = "default-theme",
-}) {
+}) => {
   const modifiedRef = useRef(null);
   const defaultRef = useRef(null);
   const [copied, setCopied] = React.useState(false);
-
-  useEffect(() => {
-    const modified = modifiedRef.current;
-    const defaultView = defaultRef.current;
-
-    if (!modified || !defaultView) return;
-
-    const handleScroll = (scrolling, other) => {
-      other.scrollTop = scrolling.scrollTop;
-    };
-
-    const handleModifiedScroll = () => handleScroll(modified, defaultView);
-    const handleDefaultScroll = () => handleScroll(defaultView, modified);
-
-    modified.addEventListener("scroll", handleModifiedScroll);
-    defaultView.addEventListener("scroll", handleDefaultScroll);
-
-    return () => {
-      modified.removeEventListener("scroll", handleModifiedScroll);
-      defaultView.removeEventListener("scroll", handleDefaultScroll);
-    };
-  }, []);
 
   const copyCode = async () => {
     await navigator.clipboard.writeText(code);
@@ -125,6 +103,6 @@ const CodePreview = memo(function CodePreview({
       </motion.div>
     );
   }
-});
+};
 
 export default CodePreview;

@@ -36,10 +36,10 @@ const ThemeControls = memo(function ThemeControls() {
     }
   };
 
-  const handleBoostContrast = useCallback(() => {
+  const handleBoostContrast = () => {
     const boostedTheme = boostThemeContrast(store.theme);
     themeStore.theme = boostedTheme;
-  }, [store.theme]);
+  };
 
   return (
     <motion.div
@@ -116,7 +116,7 @@ const ThemeControls = memo(function ThemeControls() {
             />
             <ValueAdjuster
               value={store.contrast}
-              onChange={themeStore.handleContrastChange}
+              onChange={themeStore.updateContrast}
               label="Contrast"
               description="Modify the difference between light and dark colors"
               disabled={store.isLoading}
