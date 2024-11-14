@@ -101,9 +101,15 @@ export function ThemeProvider({ children, defaultTheme }) {
     }
   }, [selectedTheme, allThemes]);
 
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(JSON.stringify(theme, null, 2));
-  }, [theme]);
+  const handleCopy = () => {
+    // Extract only the required properties
+    const themeToExport = {
+      semanticTokenColors: theme.semanticTokenColors,
+      tokenColors: theme.tokenColors,
+    };
+
+    navigator.clipboard.writeText(JSON.stringify(themeToExport, null, 2));
+  };
 
   const handleThemeChange = useCallback(
     (themeId) => {
