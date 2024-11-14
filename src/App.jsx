@@ -1,164 +1,25 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { createHighlighter } from "shiki";
-import { motion, AnimatePresence } from "framer-motion";
-import { Github, Settings2, Copy, RefreshCw, Menu, X } from "lucide-react"; // Add this import
-import { themes } from "./themes";
-import { SAMPLE_CODES } from "./data/sampleCodes";
-import { convertThemeToShikiFormat } from "./utils/themeUtils";
-import ThemeControls from "./components/ThemeControls";
+import { motion } from "framer-motion";
+import React, { useEffect } from "react";
+import { useSnapshot } from "valtio";
 import CodePreview from "./components/CodePreview";
-import { ThemeProvider, useTheme } from "./context/ThemeContext";
-import { cn } from "./lib/utils";
-import SettingsPanel from "./components/SettingsPanel";
-import { SettingsProvider, useSettings } from "./context/SettingsContext";
-import { SidebarProvider, useSidebar } from "./context/SidebarContext"; // Add this line
+import ThemeControls from "./components/ThemeControls";
+import { SAMPLE_CODES } from "./data/sampleCodes";
+import { themeStore } from "./stores/themeStore";
+import { highlighterStore } from "./stores/highlighterStore";
 
-// Create singleton highlighter instances
-let highlighterInstance = null;
-let defaultHighlighterInstance = null;
-
-async function getHighlighter(theme, isDefault = false) {
-  try {
-    if (isDefault) {
-      if (!defaultHighlighterInstance) {
-        defaultHighlighterInstance = await createHighlighter({
-          themes: [theme],
-          langs: [
-            "javascript",
-            "typescript",
-            "python",
-            "rust",
-            "go",
-            "css",
-            "jsx",
-            "tsx",
-            "php",
-            "json",
-            "vue",
-          ],
-        });
-      } else {
-        await defaultHighlighterInstance.loadTheme(theme);
-        defaultHighlighterInstance.setTheme(theme.name);
-      }
-      return defaultHighlighterInstance;
-    } else {
-      if (!highlighterInstance) {
-        highlighterInstance = await createHighlighter({
-          themes: [theme],
-          langs: [
-            "javascript",
-            "typescript",
-            "python",
-            "rust",
-            "go",
-            "css",
-            "jsx",
-            "tsx",
-            "php",
-            "json",
-            "vue",
-          ],
-        });
-      } else {
-        await highlighterInstance.loadTheme(theme);
-        highlighterInstance.setTheme(theme.name);
-      }
-      return highlighterInstance;
-    }
-  } catch (error) {
-    console.error("Error creating/updating highlighter:", error);
-    throw error;
-  }
+function Sidebar() {
+  return <ThemeControls />;
 }
 
-const defaultTheme = themes.default.theme;
-
-function Navbar() {
-  const { isSettingsOpen, setIsSettingsOpen, settings } = useSettings();
-  const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } =
-    useSidebar();
-  const shortcutKey = settings?.shortcuts?.toggleSettings || "K";
-
-  return (
-    <>
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm border-b border-border z-[97]"
-      >
-        <div className="px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              {/* Add sidebar toggle button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  if (window.innerWidth < 1024) {
-                    setIsMobileOpen(!isMobileOpen);
-                  } else {
-                    setIsCollapsed(!isCollapsed);
-                  }
-                }}
-                className="p-2 hover:bg-accent rounded-md"
-              >
-                <Menu className="w-5 h-5" />
-              </motion.button>
-
-              <motion.h1
-                className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                VSCode Theme Playground
-              </motion.h1>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <motion.a
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-full hover:bg-accent"
-              >
-                <Github className="w-5 h-5" />
-              </motion.a>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsSettingsOpen(true)}
-                className="p-2 rounded-full hover:bg-accent group relative"
-              >
-                <Settings2 className="w-5 h-5" />
-                <span className="absolute hidden group-hover:block right-0 top-full mt-2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded whitespace-nowrap">
-                  Settings (Ctrl+{shortcutKey})
-                </span>
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-      <SettingsPanel
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
-    </>
-  );
-}
-
-function CodePreviews({ highlighter, defaultHighlighter }) {
-  const { theme, selectedTheme } = useTheme();
-  const themeObject = useMemo(() => convertThemeToShikiFormat(theme), [theme]);
+function CodePreviews() {
+  const { highlighter, defaultHighlighter } = useSnapshot(highlighterStore);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="grid grid-cols-1 2xl:grid-cols-2 gap-6 p-4" // Removed ml-[360px]
+      className="flex flex-col gap-6 max-w-[1200px] mx-auto"
     >
       {Object.entries(SAMPLE_CODES).map(([lang, code], index) => (
         <motion.div
@@ -181,55 +42,14 @@ function CodePreviews({ highlighter, defaultHighlighter }) {
   );
 }
 
-function AppContent() {
-  const { theme, selectedTheme, setIsLoading, availableThemes } = useTheme();
-  const { isCollapsed, isMobileOpen } = useSidebar(); // Add isMobileOpen
-  const [highlighter, setHighlighter] = useState(null);
-  const [defaultHighlighter, setDefaultHighlighter] = useState(null);
-  const [error, setError] = useState(null);
+function App() {
+  const store = useSnapshot(themeStore);
+  const { error } = useSnapshot(highlighterStore);
 
   useEffect(() => {
-    async function initHighlighters() {
-      try {
-        setIsLoading(true);
-        const modifiedTheme = {
-          ...convertThemeToShikiFormat(theme),
-          name: "custom-theme",
-        };
-
-        // Get the default theme from availableThemes instead of themes
-        const defaultTheme = {
-          ...convertThemeToShikiFormat(availableThemes[selectedTheme].theme),
-          name: "default-theme",
-        };
-
-        const hl = await getHighlighter(modifiedTheme);
-        const defaultHl = await getHighlighter(defaultTheme, true);
-
-        setHighlighter(hl);
-        setDefaultHighlighter(defaultHl);
-        setError(null);
-      } catch (err) {
-        console.error("Highlighter initialization error:", err);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    initHighlighters();
-
-    // Cleanup function
-    return () => {
-      if (highlighterInstance) {
-        highlighterInstance.dispose();
-        highlighterInstance = null;
-      }
-      if (defaultHighlighterInstance) {
-        defaultHighlighterInstance.dispose();
-        defaultHighlighterInstance = null;
-      }
-    };
-  }, [theme, selectedTheme, setIsLoading, availableThemes]); // Add availableThemes to dependencies
+    highlighterStore.initializeHighlighters();
+    return () => highlighterStore.dispose();
+  }, [store.theme, store.selectedTheme]);
 
   if (error) {
     return (
@@ -249,49 +69,14 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
-      <main className="pt-16">
-        <ThemeControls />
-        <motion.div
-          layout
-          animate={{
-            paddingLeft: isCollapsed ? "60px" : "360px",
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 500, // Increased from 300
-            damping: 40, // Increased from 30
-            mass: 0.8, // Added for snappier animation
-          }}
-          className={cn(
-            "will-change-[padding] transition-gpu", // Added hardware acceleration
-            "p-4", // Consistent padding
-            // Remove padding on mobile when sidebar is open
-            isMobileOpen && "!pl-4"
-          )}
-        >
-          <div className="grid grid-cols-1 gap-6">
-            <CodePreviews
-              highlighter={highlighter}
-              defaultHighlighter={defaultHighlighter}
-            />
-          </div>
-        </motion.div>
+    <div className="min-h-screen bg-background text-foreground flex">
+      <Sidebar />
+      <main className="flex-1 ml-[360px]">
+        <div className="p-6 max-w-full">
+          <CodePreviews />
+        </div>
       </main>
     </div>
-  );
-}
-
-function App() {
-  return (
-    <SettingsProvider>
-      <ThemeProvider defaultTheme={defaultTheme}>
-        <SidebarProvider>
-          <AppContent />
-        </SidebarProvider>
-      </ThemeProvider>
-    </SettingsProvider>
   );
 }
 

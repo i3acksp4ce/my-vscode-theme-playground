@@ -14,6 +14,9 @@ importers:
       clsx:
         specifier: ^2.1.0
         version: 2.1.1
+      derive-valtio:
+        specifier: ^0.2.0
+        version: 0.2.0(valtio@2.1.2(@types/react@18.3.12)(react@18.3.1))
       framer-motion:
         specifier: ^11.0.3
         version: 11.11.11(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -38,6 +41,9 @@ importers:
       tinycolor2:
         specifier: ^1.6.0
         version: 1.6.0
+      valtio:
+        specifier: ^2.1.2
+        version: 2.1.2(@types/react@18.3.12)(react@18.3.1)
       vscode-textmate:
         specifier: ^9.0.0
         version: 9.1.0
@@ -604,6 +610,11 @@ packages:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
     engines: {node: '>=6'}
 
+  derive-valtio@0.2.0:
+    resolution: {integrity: sha512-6slhaFHtfaL3t5dLYaQt6s4G2xZymhu0Ktdl7OMeVk8+46RgR8ft6FL0Tr4F31W+yPH03nJe1SSP4JFy2hSMRA==}
+    peerDependencies:
+      valtio: '>=2.0.0-rc.0'
+
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
 
@@ -920,6 +931,9 @@ packages:
   property-information@6.5.0:
     resolution: {integrity: sha512-PgTgs/BlvHxOu8QuEN7wi5A0OmXaBcHpmCSTehcs6Uuu9IkDIEo13Hy7n898RHfrQ49vKCoGeWZSaAK01nwVig==}
 
+  proxy-compare@3.0.0:
+    resolution: {integrity: sha512-y44MCkgtZUCT9tZGuE278fB7PWVf7fRYy0vbRXAts2o5F0EfC4fIQrvQQGBJo1WJbFcVLXzApOscyJuZqHQc1w==}
+
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
@@ -1084,6 +1098,18 @@ packages:
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
+
+  valtio@2.1.2:
+    resolution: {integrity: sha512-fhekN5Rq7dvHULHHBlJeXHrQDl0Jj9GXfNavCm3gkD06crGchaG1nf/J7gSlfZU2wPcRdVS5jBKWHtE2NNz97A==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      react: '>=18.0.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
 
   vfile-message@4.0.2:
     resolution: {integrity: sha512-jRDZ1IMLttGj41KcZvlrYAaI3CfqpLpfpf+Mfig13viT6NKvRzWZ+lXz0Y5D60w6uJIBAOGq9mSHf0gktF0duw==}
@@ -1622,6 +1648,10 @@ snapshots:
 
   dequal@2.0.3: {}
 
+  derive-valtio@0.2.0(valtio@2.1.2(@types/react@18.3.12)(react@18.3.1)):
+    dependencies:
+      valtio: 2.1.2(@types/react@18.3.12)(react@18.3.1)
+
   devlop@1.1.0:
     dependencies:
       dequal: 2.0.3
@@ -1924,6 +1954,8 @@ snapshots:
 
   property-information@6.5.0: {}
 
+  proxy-compare@3.0.0: {}
+
   queue-microtask@1.2.3: {}
 
   react-dom@18.3.1(react@18.3.1):
@@ -2136,6 +2168,13 @@ snapshots:
       picocolors: 1.1.1
 
   util-deprecate@1.0.2: {}
+
+  valtio@2.1.2(@types/react@18.3.12)(react@18.3.1):
+    dependencies:
+      proxy-compare: 3.0.0
+    optionalDependencies:
+      '@types/react': 18.3.12
+      react: 18.3.1
 
   vfile-message@4.0.2:
     dependencies:

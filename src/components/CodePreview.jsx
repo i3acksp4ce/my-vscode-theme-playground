@@ -2,8 +2,6 @@ import React, { memo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useSettings } from "../context/SettingsContext";
-import { useSidebar } from "../context/SidebarContext"; // Add this line
 
 const CodePreview = memo(function CodePreview({
   code,
@@ -13,8 +11,6 @@ const CodePreview = memo(function CodePreview({
   themeName = "custom-theme",
   defaultThemeName = "default-theme",
 }) {
-  const { settings } = useSettings();
-  const { isCollapsed, isMobileOpen } = useSidebar(); // Add this line
   const modifiedRef = useRef(null);
   const defaultRef = useRef(null);
   const [copied, setCopied] = React.useState(false);
@@ -60,19 +56,18 @@ const CodePreview = memo(function CodePreview({
     });
 
     const codeStyle = {
-      fontSize: `${settings.appearance.fontSize}px`,
-      maxHeight: `${settings.appearance.previewHeight}px`,
+      fontSize: "14px",
+      maxHeight: "400px", // Fixed height for better consistency
+      minHeight: "200px",
     };
 
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={cn(
-          "rounded-lg border border-border bg-card overflow-hidden"
-        )}
+        className="rounded-lg border border-border bg-card overflow-hidden"
       >
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-2 border-b border-border bg-card/80 backdrop-blur-sm">
           <h3 className="text-sm font-medium capitalize">{lang}</h3>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -88,19 +83,9 @@ const CodePreview = memo(function CodePreview({
           </motion.button>
         </div>
 
-        <div
-          className={cn(
-            "grid divide-border",
-            isCollapsed && !isMobileOpen
-              ? "lg:grid-cols-2 grid-cols-1" // Only use 2 columns when sidebar is collapsed on desktop
-              : "2xl:grid-cols-2 grid-cols-1", // Use 2 columns on very large screens when sidebar is visible
-            isCollapsed && !isMobileOpen
-              ? "lg:divide-x divide-y"
-              : "2xl:divide-x divide-y"
-          )}
-        >
+        <div className="grid grid-cols-2 divide-x divide-border">
           <div className="overflow-hidden">
-            <div className="text-xs text-center py-1 bg-muted text-muted-foreground">
+            <div className="sticky top-0 z-10 text-xs text-center py-1 bg-muted/80 backdrop-blur-sm text-muted-foreground">
               Default
             </div>
             <div
@@ -111,7 +96,7 @@ const CodePreview = memo(function CodePreview({
             />
           </div>
           <div className="overflow-hidden">
-            <div className="text-xs text-center py-1 bg-muted text-muted-foreground">
+            <div className="sticky top-0 z-10 text-xs text-center py-1 bg-muted/80 backdrop-blur-sm text-muted-foreground">
               Modified
             </div>
             <div
