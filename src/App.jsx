@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import React, { useEffect } from "react";
 import { useSnapshot } from "valtio";
 import CodePreview from "./components/CodePreview";
@@ -6,6 +6,7 @@ import ThemeControls from "./components/ThemeControls";
 import { SAMPLE_CODES } from "./data/sampleCodes";
 import { themeStore } from "./stores/themeStore";
 import { highlighterStore } from "./stores/highlighterStore";
+import LoadingOverlay from "./components/LoadingOverlay";
 
 function Sidebar() {
   return <ThemeControls />;
@@ -48,7 +49,18 @@ function App() {
 
   useEffect(() => {
     highlighterStore.initializeHighlighters();
-    return () => highlighterStore.dispose();
+
+    // Only dispose on unmount
+    return () => {
+      highlighterStore.dispose();
+    };
+  }, []); // Empty dependency array
+
+  // Add separate effect for theme updates
+  useEffect(() => {
+    if (highlighterStore.highlighter) {
+      highlighterStore.resetHighlighters();
+    }
   }, [store.theme, store.selectedTheme]);
 
   if (error) {
@@ -69,14 +81,19 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
-      <Sidebar />
-      <main className="flex-1 ml-[360px]">
-        <div className="p-6 max-w-full">
-          <CodePreviews />
-        </div>
-      </main>
-    </div>
+    <>
+      <AnimatePresence>
+        {(store.isLoading || highlighterStore.isLoading) && <LoadingOverlay />}
+      </AnimatePresence>
+      <div className="min-h-screen bg-background text-foreground flex">
+        <Sidebar />
+        <main className="flex-1 ml-[360px]">
+          <div className="p-6 max-w-full">
+            <CodePreviews />
+          </div>
+        </main>
+      </div>
+    </>
   );
 }
 

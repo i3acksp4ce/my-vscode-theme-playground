@@ -28,19 +28,27 @@ export const highlighterStore = proxy({
 
   async getHighlighter(theme, isDefault = false) {
     try {
-      if (isDefault) {
-        defaultHighlighterInstance = await createHighlighter({
-          themes: [theme],
-          langs: supportedLanguages,
-        });
-        return defaultHighlighterInstance;
-      } else {
-        highlighterInstance = await createHighlighter({
-          themes: [theme],
-          langs: supportedLanguages,
-        });
-        return highlighterInstance;
+      // Always create new instance for theme changes
+      const newHighlighter = await createHighlighter({
+        themes: [theme],
+        langs: supportedLanguages,
+      });
+
+      // Dispose old instance before assigning new one
+      if (isDefault && defaultHighlighterInstance) {
+        defaultHighlighterInstance.dispose?.();
+      } else if (!isDefault && highlighterInstance) {
+        highlighterInstance.dispose?.();
       }
+
+      // Assign new instance
+      if (isDefault) {
+        defaultHighlighterInstance = newHighlighter;
+      } else {
+        highlighterInstance = newHighlighter;
+      }
+
+      return newHighlighter;
     } catch (error) {
       console.error("Error creating/updating highlighter:", error);
       throw error;
@@ -64,8 +72,10 @@ export const highlighterStore = proxy({
         name: "default-theme",
       };
 
-      const hl = await this.getHighlighter(modifiedTheme);
-      const defaultHl = await this.getHighlighter(defaultTheme, true);
+      const [hl, defaultHl] = await Promise.all([
+        this.getHighlighter(modifiedTheme),
+        this.getHighlighter(defaultTheme, true),
+      ]);
 
       this.highlighter = hl;
       this.defaultHighlighter = defaultHl;
@@ -78,22 +88,17 @@ export const highlighterStore = proxy({
   },
 
   async resetHighlighters() {
-    // First dispose existing highlighters
-    this.dispose();
-
-    // Reset the instances
-    highlighterInstance = null;
-    defaultHighlighterInstance = null;
-
-    // Reinitialize with fresh instances
+    // Only dispose if we're switching themes completely
     await this.initializeHighlighters();
   },
 
   dispose() {
     if (highlighterInstance) {
+      highlighterInstance.dispose?.();
       highlighterInstance = null;
     }
     if (defaultHighlighterInstance) {
+      defaultHighlighterInstance.dispose?.();
       defaultHighlighterInstance = null;
     }
     this.highlighter = null;

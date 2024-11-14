@@ -10,6 +10,7 @@ import { ColorInput } from "./theme-control/color-input";
 import { DropZone } from "./theme-control/drop-zone";
 import { Tooltip } from "./theme-control/tooltip";
 import { ValueAdjuster } from "./theme-control/value-adjuster";
+import { highlighterStore } from "../stores/highlighterStore";
 
 const ThemeControls = memo(function ThemeControls() {
   const store = useSnapshot(themeStore);
@@ -18,8 +19,8 @@ const ThemeControls = memo(function ThemeControls() {
     store.theme.colors?.["editor.background"] || "#0d1117"
   );
 
-  const handleBackgroundChange = useCallback((color) => {
-    themeStore.updateEditorBackground(color);
+  const handleBackgroundChange = useCallback(async (color) => {
+    await themeStore.updateEditorBackground(color);
     setEditorBackground(color);
   }, []);
 
@@ -36,9 +37,17 @@ const ThemeControls = memo(function ThemeControls() {
     }
   };
 
-  const handleBoostContrast = () => {
-    const boostedTheme = boostThemeContrast(store.theme);
-    themeStore.theme = boostedTheme;
+  const handleBoostContrast = async () => {
+    themeStore.isLoading = true;
+    try {
+      const boostedTheme = boostThemeContrast(store.theme);
+      themeStore.theme = boostedTheme;
+      await highlighterStore.resetHighlighters();
+    } catch (error) {
+      console.error("Boost contrast error:", error);
+    } finally {
+      themeStore.isLoading = false;
+    }
   };
 
   return (

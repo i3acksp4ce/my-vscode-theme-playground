@@ -22,43 +22,70 @@ export const themeStore = proxy({
     ...themes,
   },
 
-  updateBrightness(value) {
-    themeStore.brightness = value;
-    if (value === 0) {
-      themeStore.theme = deepClone(themeStore.originalTheme);
-      return;
+  async updateBrightness(value) {
+    themeStore.isLoading = true;
+    try {
+      themeStore.brightness = value;
+      if (value === 0) {
+        themeStore.theme = deepClone(themeStore.originalTheme);
+      } else {
+        themeStore.theme = adjustBrightnessForTheme(
+          deepClone(themeStore.originalTheme),
+          value
+        );
+      }
+      await highlighterStore.resetHighlighters();
+    } finally {
+      themeStore.isLoading = false;
     }
-    themeStore.theme = adjustBrightnessForTheme(
-      themeStore.originalTheme,
-      value
-    );
   },
 
-  updateLuminance(value) {
-    themeStore.luminance = value;
-    if (value === 0) {
-      themeStore.theme = deepClone(themeStore.originalTheme);
-      return;
+  async updateLuminance(value) {
+    themeStore.isLoading = true;
+    try {
+      themeStore.luminance = value;
+      if (value === 0) {
+        themeStore.theme = deepClone(themeStore.originalTheme);
+      } else {
+        themeStore.theme = adjustLuminanceForTheme(
+          deepClone(themeStore.originalTheme),
+          value
+        );
+      }
+      await highlighterStore.resetHighlighters();
+    } finally {
+      themeStore.isLoading = false;
     }
-    themeStore.theme = adjustLuminanceForTheme(themeStore.originalTheme, value);
   },
 
-  updateContrast(value) {
-    themeStore.contrast = value;
-    if (value === 0) {
-      // Use deepClone for complete isolation
-      themeStore.theme = deepClone(themeStore.originalTheme);
-      return;
+  async updateContrast(value) {
+    themeStore.isLoading = true;
+    try {
+      themeStore.contrast = value;
+      if (value === 0) {
+        themeStore.theme = deepClone(themeStore.originalTheme);
+      } else {
+        themeStore.theme = adjustContrastForTheme(
+          deepClone(themeStore.originalTheme),
+          value
+        );
+      }
+      await highlighterStore.resetHighlighters();
+    } finally {
+      themeStore.isLoading = false;
     }
-    // Create new theme instance for contrast adjustment
-    themeStore.theme = adjustContrastForTheme(
-      deepClone(themeStore.originalTheme),
-      value
-    );
   },
 
-  handleWCAG(level) {
-    themeStore.theme = improveWCAG(themeStore.theme, level);
+  async handleWCAG(level) {
+    themeStore.isLoading = true;
+    try {
+      themeStore.theme = improveWCAG(themeStore.theme, level);
+      await highlighterStore.resetHighlighters();
+    } catch (error) {
+      console.error("WCAG adjustment error:", error);
+    } finally {
+      themeStore.isLoading = false;
+    }
   },
 
   async handleReset() {
@@ -99,34 +126,48 @@ export const themeStore = proxy({
     themeStore.isLoading = false;
   },
 
-  handleCopy() {
-    const themeToExport = {
-      semanticTokenColors: themeStore.theme.semanticTokenColors,
-      tokenColors: themeStore.theme.tokenColors,
-    };
-    navigator.clipboard.writeText(JSON.stringify(themeToExport, null, 2));
-  },
-
-  handleThemeChange(themeId) {
+  async handleCopy() {
     themeStore.isLoading = true;
-    const newTheme = themeStore.availableThemes[themeId]?.theme;
-
-    if (!newTheme) {
-      console.error("Theme not found");
+    try {
+      const themeToExport = {
+        semanticTokenColors: themeStore.theme.semanticTokenColors,
+        tokenColors: themeStore.theme.tokenColors,
+      };
+      await navigator.clipboard.writeText(
+        JSON.stringify(themeToExport, null, 2)
+      );
+    } catch (error) {
+      console.error("Theme copy error:", error);
+    } finally {
       themeStore.isLoading = false;
-      return;
     }
-
-    themeStore.selectedTheme = themeId;
-    themeStore.theme = newTheme;
-    themeStore.originalTheme = newTheme;
-    themeStore.brightness = 0;
-    themeStore.luminance = 0;
-    themeStore.contrast = 0;
-    themeStore.isLoading = false;
   },
 
-  addCustomTheme(themeData, fileName) {
+  async handleThemeChange(themeId) {
+    themeStore.isLoading = true;
+    try {
+      const newTheme = themeStore.availableThemes[themeId]?.theme;
+      if (!newTheme) {
+        throw new Error("Theme not found");
+      }
+
+      themeStore.selectedTheme = themeId;
+      themeStore.theme = newTheme;
+      themeStore.originalTheme = newTheme;
+      themeStore.brightness = 0;
+      themeStore.luminance = 0;
+      themeStore.contrast = 0;
+
+      await highlighterStore.resetHighlighters();
+    } catch (error) {
+      console.error("Theme change error:", error);
+    } finally {
+      themeStore.isLoading = false;
+    }
+  },
+
+  async addCustomTheme(themeData, fileName) {
+    themeStore.isLoading = true;
     try {
       if (!themeData.tokenColors) {
         throw new Error(
@@ -150,21 +191,48 @@ export const themeStore = proxy({
 
       themeStore.customThemes[themeId] = newTheme;
       themeStore.updateAvailableThemes();
-      themeStore.handleThemeChange(themeId);
+      await themeStore.handleThemeChange(themeId);
       return themeId;
     } catch (error) {
-      console.error(`Failed to add theme: ${error.message}`);
+      console.error("Custom theme error:", error);
       throw error;
+    } finally {
+      themeStore.isLoading = false;
     }
   },
 
-  removeCustomTheme(themeId) {
+  async removeCustomTheme(themeId) {
     if (!themeId.startsWith("custom-")) return;
 
-    delete themeStore.customThemes[themeId];
-    themeStore.updateAvailableThemes();
-    if (themeStore.selectedTheme === themeId) {
-      themeStore.handleThemeChange("default");
+    themeStore.isLoading = true;
+    try {
+      delete themeStore.customThemes[themeId];
+      themeStore.updateAvailableThemes();
+      if (themeStore.selectedTheme === themeId) {
+        await themeStore.handleThemeChange("default");
+      }
+    } catch (error) {
+      console.error("Remove theme error:", error);
+    } finally {
+      themeStore.isLoading = false;
+    }
+  },
+
+  async updateEditorBackground(color) {
+    themeStore.isLoading = true;
+    try {
+      themeStore.theme = {
+        ...themeStore.theme,
+        colors: {
+          ...themeStore.theme.colors,
+          "editor.background": color,
+        },
+      };
+      await highlighterStore.resetHighlighters();
+    } catch (error) {
+      console.error("Background update error:", error);
+    } finally {
+      themeStore.isLoading = false;
     }
   },
 
@@ -172,16 +240,6 @@ export const themeStore = proxy({
     themeStore.availableThemes = {
       ...themes,
       ...themeStore.customThemes,
-    };
-  },
-
-  updateEditorBackground(color) {
-    themeStore.theme = {
-      ...themeStore.theme,
-      colors: {
-        ...themeStore.theme.colors,
-        "editor.background": color,
-      },
     };
   },
 
