@@ -7,6 +7,7 @@ import { SAMPLE_CODES } from "./data/sampleCodes";
 import { themeStore } from "./stores/themeStore";
 import { highlighterStore } from "./stores/highlighterStore";
 import LoadingOverlay from "./components/LoadingOverlay";
+import { useEffectOnce } from "./hooks/useEffectOnce";
 
 function Sidebar() {
   return <ThemeControls />;
@@ -47,14 +48,14 @@ function App() {
   const store = useSnapshot(themeStore);
   const { error } = useSnapshot(highlighterStore);
 
-  useEffect(() => {
+  useEffectOnce(() => {
     highlighterStore.initializeHighlighters();
 
     // Only dispose on unmount
     return () => {
       highlighterStore.dispose();
     };
-  }, []); // Empty dependency array
+  });
 
   // Add separate effect for theme updates
   useEffect(() => {
