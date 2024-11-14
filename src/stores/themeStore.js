@@ -129,10 +129,7 @@ export const themeStore = proxy({
   async handleCopy() {
     themeStore.isLoading = true;
     try {
-      const themeToExport = {
-        semanticTokenColors: themeStore.theme.semanticTokenColors,
-        tokenColors: themeStore.theme.tokenColors,
-      };
+      const themeToExport = deepClone(themeStore.theme);
       await navigator.clipboard.writeText(
         JSON.stringify(themeToExport, null, 2)
       );
