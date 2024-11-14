@@ -22,18 +22,21 @@ export const DropZone = ({ onFileDrop }) => {
     e.preventDefault();
     setIsDragging(false);
 
-    const file = e.dataTransfer.files[0];
-    if (file?.type === "application/json") {
-      onFileDrop(file);
+    const files = Array.from(e.dataTransfer.files).filter(
+      (file) => file.type === "application/json"
+    );
+
+    if (files.length > 0) {
+      onFileDrop(files);
     } else {
-      console.error("Please drop a JSON file");
+      console.error("Please drop JSON files");
     }
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onFileDrop(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      onFileDrop(files);
     }
   };
 
@@ -50,6 +53,7 @@ export const DropZone = ({ onFileDrop }) => {
         ref={fileInputRef}
         type="file"
         accept=".json"
+        multiple
         onChange={handleFileChange}
         className="hidden"
       />
@@ -63,9 +67,11 @@ export const DropZone = ({ onFileDrop }) => {
         <Upload className="w-8 h-8 text-muted-foreground" />
         <div className="text-center">
           <p className="text-sm font-medium">
-            Drop theme file here or click to upload
+            Drop theme files here or click to upload
           </p>
-          <p className="text-xs text-muted-foreground">Supports JSON files</p>
+          <p className="text-xs text-muted-foreground">
+            Supports multiple JSON files
+          </p>
         </div>
       </div>
     </motion.div>

@@ -24,16 +24,18 @@ const ThemeControls = memo(function ThemeControls() {
     setEditorBackground(color);
   }, []);
 
-  const handleFileDrop = async (file) => {
-    try {
-      const text = await file.text();
-      const themeData = JSON.parse(text);
-      await themeStore.addCustomTheme(
-        themeData,
-        file.name.replace(/\.json$/, "")
-      );
-    } catch (error) {
-      console.error(`Error loading theme: ${error.message}`);
+  const handleFileDrop = async (files) => {
+    for (const file of files) {
+      try {
+        const text = await file.text();
+        const themeData = JSON.parse(text);
+        await themeStore.addCustomTheme(
+          themeData,
+          file.name.replace(/\.json$/, "")
+        );
+      } catch (error) {
+        console.error(`Error loading theme ${file.name}: ${error.message}`);
+      }
     }
   };
 

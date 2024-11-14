@@ -182,7 +182,9 @@ export const themeStore = proxy({
         colors: themeData.colors || themeStore.theme.colors,
       };
 
-      const themeId = `custom-${Date.now()}`;
+      const themeId = `custom-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)}`;
       const newTheme = {
         id: themeId,
         name: fileName,
@@ -191,7 +193,6 @@ export const themeStore = proxy({
 
       themeStore.customThemes[themeId] = newTheme;
       themeStore.updateAvailableThemes();
-      await themeStore.handleThemeChange(themeId);
       return themeId;
     } catch (error) {
       console.error("Custom theme error:", error);
