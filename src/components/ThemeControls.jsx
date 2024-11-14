@@ -1,28 +1,15 @@
-import React, { memo, useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { useTheme } from "../context/ThemeContext";
-import {
-  Loader2,
-  RefreshCw,
-  Copy,
-  Zap,
-  RotateCcw,
-  Upload,
-  Trash2,
-  Info,
-  ChevronRight,
-  ChevronLeft,
-  Eye, // Add this import
-} from "lucide-react";
-import { cn } from "../lib/utils";
-import ColorPreview from "./ColorPreview";
+import { Copy, RefreshCw, Trash2, Zap } from "lucide-react";
+import React, { memo, useCallback, useState } from "react";
 import { useSidebar } from "../context/SidebarContext"; // Import the sidebar context hook
+import { useTheme } from "../context/ThemeContext";
+import { cn } from "../lib/utils";
 import { boostThemeContrast } from "../utils/themeUtils";
-import { Tooltip } from "./theme-control/tooltip";
-import { DropZone } from "./theme-control/drop-zone";
 import { Button } from "./theme-control/button";
-import { ValueAdjuster } from "./theme-control/value-adjuster";
 import { ColorInput } from "./theme-control/color-input";
+import { DropZone } from "./theme-control/drop-zone";
+import { Tooltip } from "./theme-control/tooltip";
+import { ValueAdjuster } from "./theme-control/value-adjuster";
 
 const ThemeControls = memo(function ThemeControls() {
   const { isCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();

@@ -7,7 +7,6 @@ import { SAMPLE_CODES } from "./data/sampleCodes";
 import { convertThemeToShikiFormat } from "./utils/themeUtils";
 import ThemeControls from "./components/ThemeControls";
 import CodePreview from "./components/CodePreview";
-import ColorPreview from "./components/ColorPreview"; // Add this line
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { cn } from "./lib/utils";
 import SettingsPanel from "./components/SettingsPanel";
@@ -74,49 +73,6 @@ async function getHighlighter(theme, isDefault = false) {
 }
 
 const defaultTheme = themes.default.theme;
-
-// Add this utility function
-const getThemeColors = (theme) => {
-  if (!theme) return {};
-
-  const colors = {
-    workbench: {},
-    semantic: {},
-    tokens: {},
-  };
-
-  // Extract workbench colors
-  if (theme.colors) {
-    Object.entries(theme.colors).forEach(([key, value]) => {
-      colors.workbench[key] = value;
-    });
-  }
-
-  // Extract semantic token colors
-  if (theme.semanticTokenColors) {
-    Object.entries(theme.semanticTokenColors).forEach(([key, value]) => {
-      const colorValue =
-        typeof value === "object" ? value.foreground || value.color : value;
-      if (colorValue) {
-        colors.semantic[key] = colorValue;
-      }
-    });
-  }
-
-  // Extract token colors
-  if (theme.tokenColors) {
-    theme.tokenColors.forEach((token) => {
-      if (token.settings?.foreground) {
-        const scope = Array.isArray(token.scope)
-          ? token.scope.join(", ")
-          : token.scope || "default";
-        colors.tokens[`${scope}`] = token.settings.foreground;
-      }
-    });
-  }
-
-  return colors;
-};
 
 function Navbar() {
   const { isSettingsOpen, setIsSettingsOpen, settings } = useSettings();
@@ -316,12 +272,6 @@ function AppContent() {
           )}
         >
           <div className="grid grid-cols-1 gap-6">
-            <ColorPreview
-              defaultTheme={getThemeColors(
-                availableThemes[selectedTheme]?.theme
-              )}
-              modifiedTheme={getThemeColors(theme)}
-            />
             <CodePreviews
               highlighter={highlighter}
               defaultHighlighter={defaultHighlighter}
