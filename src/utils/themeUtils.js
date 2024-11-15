@@ -288,3 +288,28 @@ export function boostThemeContrast(theme) {
 
   return newTheme;
 }
+
+export function rotateColorsForTheme(theme, degrees) {
+  const newTheme = JSON.parse(JSON.stringify(theme));
+
+  newTheme.tokenColors = newTheme.tokenColors.map((token) => {
+    if (token.settings && token.settings.foreground) {
+      token.settings.foreground = adjustOpacity(
+        token.settings.foreground,
+        (colorOrAlpha) => {
+          if (typeof colorOrAlpha === "number") {
+            // For alpha values, return as is
+            return colorOrAlpha;
+          }
+          // Rotate the hue of the color
+          const hsl = colorOrAlpha.toHsl();
+          hsl.h = (hsl.h + degrees) % 360;
+          return tinycolor(hsl).toHexString();
+        }
+      );
+    }
+    return token;
+  });
+
+  return newTheme;
+}

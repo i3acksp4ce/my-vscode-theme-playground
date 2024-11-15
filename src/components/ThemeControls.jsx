@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
-import { Copy, RefreshCw, Trash2, Zap } from "lucide-react";
+import { Copy, RefreshCw, Trash2, Zap, Rotate3D } from "lucide-react";
 import React, { memo, useCallback, useState } from "react";
 import { useSnapshot } from "valtio";
 import { cn } from "../lib/utils";
 import { themeStore } from "../stores/themeStore";
-import { boostThemeContrast } from "../utils/themeUtils";
+import { boostThemeContrast, rotateColorsForTheme } from "../utils/themeUtils";
 import { Button } from "./theme-control/button";
 import { ColorInput } from "./theme-control/color-input";
 import { DropZone } from "./theme-control/drop-zone";
@@ -18,6 +18,8 @@ const ThemeControls = memo(function ThemeControls() {
   const [editorBackground, setEditorBackground] = useState(
     store.theme.colors?.["editor.background"] || "#0d1117"
   );
+
+  const [rotationValue, setRotationValue] = useState(15); // Default 15 degrees
 
   const handleBackgroundChange = useCallback(async (color) => {
     await themeStore.updateEditorBackground(color);
@@ -47,6 +49,19 @@ const ThemeControls = memo(function ThemeControls() {
       await highlighterStore.resetHighlighters();
     } catch (error) {
       console.error("Boost contrast error:", error);
+    } finally {
+      themeStore.isLoading = false;
+    }
+  };
+
+  const handleRotateColors = async () => {
+    themeStore.isLoading = true;
+    try {
+      const rotatedTheme = rotateColorsForTheme(store.theme, rotationValue);
+      themeStore.theme = rotatedTheme;
+      await highlighterStore.resetHighlighters();
+    } catch (error) {
+      console.error("Rotate colors error:", error);
     } finally {
       themeStore.isLoading = false;
     }
@@ -184,6 +199,28 @@ const ThemeControls = memo(function ThemeControls() {
             <h4 className="text-sm font-medium text-muted-foreground">
               Additional Adjustments
             </h4>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <ValueAdjuster
+                  value={rotationValue}
+                  onChange={setRotationValue}
+                  label="Rotation Angle"
+                  description="Set the angle for color rotation (degrees)"
+                  min={1}
+                  max={360}
+                  disabled={store.isLoading}
+                />
+                <Tooltip content="Rotate colors clockwise">
+                  <Button
+                    onClick={handleRotateColors}
+                    icon={Rotate3D}
+                    disabled={store.isLoading}
+                  >
+                    Rotate Colors
+                  </Button>
+                </Tooltip>
+              </div>
+            </div>
             <ValueAdjuster
               value={store.brightness}
               onChange={themeStore.updateBrightness}
