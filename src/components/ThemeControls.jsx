@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Copy, RefreshCw, Trash2, Zap, Rotate3D } from "lucide-react";
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useCallback, useState, useMemo } from "react";
 import { useSnapshot } from "valtio";
 import { cn } from "../lib/utils";
 import { themeStore } from "../stores/themeStore";
@@ -11,6 +11,7 @@ import { DropZone } from "./theme-control/drop-zone";
 import { Tooltip } from "./theme-control/tooltip";
 import { ValueAdjuster } from "./theme-control/value-adjuster";
 import { highlighterStore } from "../stores/highlighterStore";
+import { ColorWheel } from "./theme-control/color-wheel";
 
 const ThemeControls = memo(function ThemeControls() {
   const store = useSnapshot(themeStore);
@@ -67,6 +68,20 @@ const ThemeControls = memo(function ThemeControls() {
     }
   };
 
+  // Extract unique colors from theme
+  const themeColors = useMemo(() => {
+    const colors = new Set();
+
+    // Get colors from tokenColors
+    store.theme.tokenColors?.forEach((token) => {
+      if (token.settings?.foreground) {
+        colors.add(token.settings.foreground);
+      }
+    });
+
+    return Array.from(colors);
+  }, [store.theme]);
+
   return (
     <motion.div
       initial={false}
@@ -79,6 +94,7 @@ const ThemeControls = memo(function ThemeControls() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* Theme selection section */}
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium block">Active Theme</label>
@@ -195,30 +211,56 @@ const ThemeControls = memo(function ThemeControls() {
             </Button>
           </div>
 
+          {/* Remove the rotation controls from Additional Adjustments */}
           <div className="grid gap-4 border-t border-border pt-4">
             <h4 className="text-sm font-medium text-muted-foreground">
               Additional Adjustments
             </h4>
+            {/* Color wheel and rotation controls - Moved to top */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <ValueAdjuster
-                  value={rotationValue}
-                  onChange={setRotationValue}
-                  label="Rotation Angle"
-                  description="Set the angle for color rotation (degrees)"
-                  min={1}
-                  max={360}
-                  disabled={store.isLoading}
-                />
-                <Tooltip content="Rotate colors clockwise">
-                  <Button
-                    onClick={handleRotateColors}
-                    icon={Rotate3D}
-                    disabled={store.isLoading}
-                  >
-                    Rotate Colors
-                  </Button>
-                </Tooltip>
+              <div className="space-y-2">
+                <label className="text-sm font-medium block">
+                  Color Distribution
+                </label>
+                <div className="p-4 bg-card/50 rounded-lg border border-border space-y-4">
+                  <ColorWheel
+                    colors={themeColors}
+                    size={240}
+                    strokeWidth={20}
+                    rotationValue={rotationValue}
+                  />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">Rotation Angle</span>
+                      <span className="text-muted-foreground">
+                        {rotationValue}°
+                      </span>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="range"
+                        min="1"
+                        max="360"
+                        value={rotationValue}
+                        onChange={(e) =>
+                          setRotationValue(Number(e.target.value))
+                        }
+                        className="flex-1 accent-primary"
+                        disabled={store.isLoading}
+                      />
+                      <Tooltip content="Rotate colors clockwise">
+                        <Button
+                          onClick={handleRotateColors}
+                          size="icon"
+                          variant="secondary"
+                          disabled={store.isLoading}
+                        >
+                          <Rotate3D className="h-4 w-4" />
+                        </Button>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <ValueAdjuster
